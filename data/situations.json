@@ -1,0 +1,379 @@
+{
+  "_readme": [
+    "Curated situation timelines. Every event carries a source URL — nothing here",
+    "is asserted without one. `approx: true` marks a date the sources disagree on",
+    "or give only to the month; the UI shows those differently.",
+    "",
+    "status:  worsening | steady | easing | developing",
+    "actor:   the party that acted. `retaliationFor` holds the id of the event",
+    "         this one was framed as a response to, which is what draws the",
+    "         action/reaction pairing in the timeline.",
+    "markets: symbols from MARKETS in lib/sources.mjs to annotate with these events."
+  ],
+
+  "situations": [
+    {
+      "id": "iran-2026",
+      "name": "US–Israel–Iran War",
+      "type": "Interstate war",
+      "status": "worsening",
+      "started": "2026-02-28",
+      "markets": ["crude", "gold"],
+      "region": "Middle East",
+      "keywords": ["iran", "iranian", "tehran", "irgc", "hormuz", "khamenei"],
+      "summary": "Seventh month of war. A June memorandum halted large-scale fighting, but both sides trade strikes over alleged violations. Iran's nuclear program, control of the Strait of Hormuz, and sanctions relief all remain unresolved.",
+      "watch": [
+        "Strait of Hormuz transit and minelaying",
+        "Ceasefire violations by either side",
+        "US shift from bombing to financial pressure"
+      ],
+      "sources": [
+        { "label": "CFR Global Conflict Tracker", "url": "https://www.cfr.org/global-conflict-tracker/conflict/confrontation-between-united-states-and-iran" },
+        { "label": "Timeline of the 2026 Iran war (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Timeline_of_the_2026_Iran_war" },
+        { "label": "CRS: Strait of Hormuz", "url": "https://www.congress.gov/crs-product/R45281" }
+      ],
+
+      "timeline": [
+        {
+          "id": "e01", "date": "2026-02-27", "actor": "US", "kind": "decision",
+          "action": "Trump authorises Operation Epic Fury, the joint US–Israeli campaign against Iran.",
+          "where": "Washington",
+          "source": "https://en.wikipedia.org/wiki/Timeline_of_the_2026_Iran_war"
+        },
+        {
+          "id": "e02", "date": "2026-02-28", "actor": "US·Israel", "kind": "strike", "major": true,
+          "action": "Coordinated opening strikes — Tomahawks, B-2s and fighters against military facilities, command centres and a leadership compound in Tehran. Supreme Leader Ali Khamenei is killed.",
+          "where": "Tehran and across Iran",
+          "source": "https://www.britannica.com/event/2026-Iran-war"
+        },
+        {
+          "id": "e03", "date": "2026-02-28", "actor": "Iran", "kind": "strike", "retaliationFor": "e02",
+          "action": "Roughly 170 ballistic missiles and drones fired at Israel, Gulf states and US bases.",
+          "where": "Israel, UAE, Qatar, Kuwait, Saudi Arabia, Bahrain",
+          "source": "https://en.wikipedia.org/wiki/Timeline_of_the_2026_Iran_war"
+        },
+        {
+          "id": "e04", "date": "2026-03-02", "actor": "Hezbollah", "kind": "strike", "retaliationFor": "e02",
+          "action": "Rocket attacks on an IDF base at Haifa. Israel calls it a declaration of war.",
+          "where": "Haifa",
+          "source": "https://en.wikipedia.org/wiki/Timeline_of_the_2026_Iran_war"
+        },
+        {
+          "id": "e05", "date": "2026-03-02", "actor": "Israel", "kind": "strike", "retaliationFor": "e04",
+          "action": "Airstrikes against more than 70 targets in Lebanon.",
+          "where": "Beirut, Beqaa Valley, southern Lebanon",
+          "source": "https://en.wikipedia.org/wiki/Timeline_of_the_2026_Iran_war"
+        },
+        {
+          "id": "e06", "date": "2026-03-03", "actor": "US·Israel", "kind": "strike", "major": true,
+          "action": "Largest single day of the campaign — 104 reported strikes, including the Natanz nuclear facility. Iranian naval vessels destroyed in the Gulf; the corvette IRIS Shahid Soleimani is sunk.",
+          "where": "Isfahan, Kermanshah, Shiraz, Natanz",
+          "source": "https://en.wikipedia.org/wiki/Timeline_of_the_2026_Iran_war"
+        },
+        {
+          "id": "e07", "date": "2026-03-09", "actor": "Iran", "kind": "political",
+          "action": "Khamenei's successor is elected.",
+          "where": "Tehran",
+          "source": "https://en.wikipedia.org/wiki/Timeline_of_the_2026_Iran_war"
+        },
+        {
+          "id": "e08", "date": "2026-04-13", "actor": "US", "kind": "economic", "major": true,
+          "action": "Naval blockade of Iranian ports begins. DoD estimates $4.8bn in lost Iranian oil revenue by 1 May.",
+          "where": "Strait of Hormuz",
+          "source": "https://www.congress.gov/crs-product/R45281"
+        },
+        {
+          "id": "e09", "date": "2026-05-07", "actor": "US", "kind": "strike",
+          "action": "Airstrikes on military sites in southern Iran and Tehran, during the ceasefire, in response to Iranian targeting of US warships.",
+          "where": "Southern Iran, Tehran",
+          "source": "https://en.wikipedia.org/wiki/7_May_2026_United_States_strikes_on_Iran"
+        },
+        {
+          "id": "e10", "date": "2026-06-15", "approx": true, "actor": "Mediation", "kind": "diplomacy", "major": true,
+          "action": "Pakistan-mediated ceasefire and memorandum of understanding halt large-scale fighting. Sources place this in June; the exact date is unsettled.",
+          "where": "Islamabad",
+          "source": "https://www.cfr.org/global-conflict-tracker/conflict/confrontation-between-united-states-and-iran"
+        },
+        {
+          "id": "e11", "date": "2026-08-24", "actor": "US", "kind": "economic",
+          "action": "Treasury announces expanded sanctions, described by Secretary Bessent as the most crushing economic operation ever mounted.",
+          "where": "Washington",
+          "source": "https://www.cfr.org/global-conflict-tracker/conflict/confrontation-between-united-states-and-iran"
+        },
+        {
+          "id": "e12", "date": "2026-08-27", "actor": "Mediation", "kind": "diplomacy",
+          "action": "Qatar-mediated negotiations over Strait of Hormuz access.",
+          "where": "Doha",
+          "source": "https://www.cfr.org/global-conflict-tracker/conflict/confrontation-between-united-states-and-iran"
+        },
+        {
+          "id": "e13", "date": "2026-08-30", "actor": "US", "kind": "strike", "major": true,
+          "action": "US strikes two IRGC launchers on Larak Island after forces were observed preparing to lay sea mines in the strait. CENTCOM calls it limited, precise action — the first US strike on Iran in over a month.",
+          "where": "Larak Island, Strait of Hormuz",
+          "source": "https://www.aljazeera.com/news/2026/8/30/us-strikes-irans-lark-island-in-first-attack-in-weeks"
+        },
+        {
+          "id": "e14", "date": "2026-08-31", "actor": "Iran", "kind": "strike", "major": true, "retaliationFor": "e13",
+          "action": "IRGC launches missiles and drones it calls \"Punishment of the Aggressor\" at the King Hussein and Al Azraq bases in Jordan, and at Al Minhad airbase in the UAE.",
+          "where": "Jordan, UAE",
+          "source": "https://www.aljazeera.com/news/2026/8/31/iran-attacks-jordan-uae-after-us-bombs-larak-island-whats-the-latest"
+        }
+      ]
+    },
+    {
+      "id": "gaza-2023",
+      "name": "Gaza War",
+      "type": "Asymmetric war · ceasefire phase",
+      "status": "steady",
+      "started": "2023-10-07",
+      "markets": [],
+      "region": "Middle East",
+      "keywords": ["gaza", "palestinian", "hamas", "rafah", "west bank", "unrwa"],
+      "summary": "In its third year, and eleven months into a ceasefire that has held without ending the killing. Phase Two \u2014 disarmament, reconstruction and a technocratic administration \u2014 was declared in January 2026, but no comprehensive rebuilding has begun, the committee meant to run Gaza has not been allowed to enter, and the Yellow Line still bisects the Strip.",
+      "watch": [
+        "Whether Phase Two moves beyond declaration",
+        "Entry of the National Committee for the Administration of Gaza",
+        "Reconstruction access and the Yellow Line",
+        "Aid funding \u2014 agencies are cutting programmes",
+        "Winter: shelter, water and disease as the rainy season arrives"
+      ],
+      "indicatorNote": "No market is linked to this subject. The meaningful indicators here are humanitarian \u2014 shelter, aid volume, water, casualties \u2014 and none of them are available as a live feed, so none are charted rather than substituting a financial proxy.",
+      "sources": [
+        { "label": "Timeline of the Gaza war (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Timeline_of_the_Gaza_war_(20_August_2025_%E2%80%93_2_October_2025)" },
+        { "label": "A Guide to the Gaza Peace Deal (CFR)", "url": "https://www.cfr.org/articles/guide-trumps-twenty-point-gaza-peace-deal" },
+        { "label": "Six months into the ceasefire (Al Jazeera)", "url": "https://www.aljazeera.com/news/2026/4/10/neither-war-nor-peace-what-gaza-looks-like-six-months-into-ceasefire" },
+        { "label": "UN Security Council on the ceasefire", "url": "https://press.un.org/en/2026/sc16364.doc.htm" },
+        { "label": "Gaza Now \u2014 facts and figures (Gisha)", "url": "https://gisha.org/en/gaza-now-facts-and-figures/" }
+      ],
+
+      "timeline": [
+        {
+          "id": "g01", "date": "2023-10-07", "actor": "Hamas", "kind": "strike", "major": true,
+          "action": "Hamas-led attack on southern Israel. The war begins.",
+          "where": "Southern Israel",
+          "source": "https://www.cfr.org/articles/guide-trumps-twenty-point-gaza-peace-deal"
+        },
+        {
+          "id": "g02", "date": "2023-10-27", "actor": "Israel", "kind": "strike", "major": true, "retaliationFor": "g01",
+          "action": "Israeli ground invasion of the Gaza Strip begins.",
+          "where": "Gaza Strip",
+          "source": "https://en.wikipedia.org/wiki/Timeline_of_the_Gaza_war_(24_November_2023_%E2%80%93_11_January_2024)"
+        },
+        {
+          "id": "g03", "date": "2023-11-24", "actor": "Mediation", "kind": "diplomacy",
+          "action": "First truce takes effect, with hostage and prisoner exchanges.",
+          "where": "Gaza Strip",
+          "source": "https://en.wikipedia.org/wiki/Timeline_of_the_Gaza_war_(24_November_2023_%E2%80%93_11_January_2024)"
+        },
+        {
+          "id": "g04", "date": "2024-05-06", "actor": "Israel", "kind": "strike", "major": true,
+          "action": "Israeli offensive on Rafah begins, displacing much of the population sheltering in the south.",
+          "where": "Rafah",
+          "source": "https://en.wikipedia.org/wiki/Timeline_of_the_Gaza_war_(16_May_2025_%E2%80%93_19_August_2025)"
+        },
+        {
+          "id": "g05", "date": "2025-01-19", "actor": "Mediation", "kind": "diplomacy", "major": true,
+          "action": "The January 2025 ceasefire takes effect.",
+          "where": "Gaza Strip",
+          "source": "https://en.wikipedia.org/wiki/January_2025_Gaza_war_ceasefire"
+        },
+        {
+          "id": "g06", "date": "2025-03-18", "actor": "Israel", "kind": "strike", "major": true,
+          "action": "Israel resumes large-scale strikes; the January ceasefire collapses.",
+          "where": "Gaza Strip",
+          "source": "https://en.wikipedia.org/wiki/January_2025_Gaza_war_ceasefire"
+        },
+        {
+          "id": "g07", "date": "2025-10-10", "actor": "Mediation", "kind": "diplomacy", "major": true,
+          "action": "The current ceasefire takes effect after the Israeli cabinet approves the agreement. Israeli forces withdraw to the Yellow Line, which bisects the Strip and leaves the population in under half its territory.",
+          "where": "Gaza Strip",
+          "source": "https://www.aljazeera.com/news/2026/1/16/us-declares-phase-two-of-gaza-ceasefire-but-what-did-phase-one-deliver"
+        },
+        {
+          "id": "g08", "date": "2025-10-13", "actor": "Mediation", "kind": "diplomacy",
+          "action": "More than twenty world leaders gather at Sharm el-Sheikh, where Trump signs the agreement ending the two-year war.",
+          "where": "Sharm el-Sheikh",
+          "source": "https://www.aljazeera.com/news/2026/1/16/us-declares-phase-two-of-gaza-ceasefire-but-what-did-phase-one-deliver"
+        },
+        {
+          "id": "g09", "date": "2025-11-17", "actor": "United Nations", "kind": "diplomacy",
+          "action": "The Security Council endorses the agreement, which enters into force as Resolution 2803.",
+          "where": "New York",
+          "source": "https://www.cfr.org/articles/guide-trumps-twenty-point-gaza-peace-deal"
+        },
+        {
+          "id": "g10", "date": "2026-01-10", "approx": true, "actor": "Israel", "kind": "political",
+          "action": "Israel confirms Hamas has returned the remains of the last hostage taken on 7 October 2023, fulfilling the terms of Phase One. Sources place this in January; the exact date is unsettled.",
+          "where": "Israel",
+          "source": "https://www.aljazeera.com/news/2026/1/16/us-declares-phase-two-of-gaza-ceasefire-but-what-did-phase-one-deliver"
+        },
+        {
+          "id": "g11", "date": "2026-01-14", "actor": "US", "kind": "diplomacy", "major": true, "retaliationFor": "g10",
+          "action": "The US announces the transition to Phase Two: disarming Hamas, rebuilding the territory, and standing up a committee of Palestinian experts to administer daily affairs under American supervision.",
+          "where": "Washington",
+          "source": "https://www.courthousenews.com/gaza-is-entering-the-second-phase-of-the-ceasefire-plan-trump-helped-broker-us-says/"
+        },
+        {
+          "id": "g12", "date": "2026-04-10", "actor": "Assessment", "kind": "political",
+          "action": "Six months into the ceasefire, reporting describes neither war nor peace \u2014 continued Israeli attacks, no tangible recovery, and no comprehensive reconstruction begun.",
+          "where": "Gaza Strip",
+          "source": "https://www.aljazeera.com/news/2026/4/10/neither-war-nor-peace-what-gaza-looks-like-six-months-into-ceasefire"
+        },
+        {
+          "id": "g13", "date": "2026-08-11", "actor": "Assessment", "kind": "political", "major": true,
+          "action": "Tallies through this date record 1,259 people killed and 4,146 injured in Israeli attacks in Gaza since the ceasefire took effect on 10 October 2025.",
+          "where": "Gaza Strip",
+          "source": "https://gisha.org/en/gaza-now-facts-and-figures/"
+        },
+        {
+          "id": "g14", "date": "2026-08-20", "approx": true, "actor": "United Nations", "kind": "diplomacy",
+          "action": "The Security Council is told the ceasefire, though far from perfect, remains the basis for recovery: some 80 per cent of buildings are damaged or destroyed, more than a million people lack permanent shelter, and the National Committee for the Administration of Gaza has still not been allowed to enter. The meeting date is approximate.",
+          "where": "New York",
+          "source": "https://press.un.org/en/2026/sc16364.doc.htm"
+        }
+      ]
+    },
+    {
+      "id": "ukraine-2022",
+      "name": "Russia–Ukraine War",
+      "type": "Interstate war",
+      "status": "worsening",
+      "started": "2022-02-24",
+      "markets": ["gas", "wheat"],
+      "region": "Europe",
+      "keywords": ["ukraine", "ukrainian", "kyiv", "russia", "russian", "moscow", "putin", "zelensky", "kremlin"],
+      "summary": "Fifth year of full-scale war. Three rounds of US-brokered talks through the spring produced prisoner exchanges and a brief energy ceasefire but never reached the territorial question. Moscow declared negotiations at a dead end in late August and is escalating strikes on Kyiv.",
+      "watch": [
+        "Whether talks resume or Russia formalises the escalation",
+        "Strikes on Ukrainian energy infrastructure ahead of winter",
+        "Ukrainian deep strikes on Russian refineries",
+        "Patriot interceptor supply"
+      ],
+      "sources": [
+        { "label": "Timeline of the Russo-Ukrainian war, 2026 (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Timeline_of_the_Russo-Ukrainian_war_(1_January_2026_%E2%80%93_present)" },
+        { "label": "ISW Russian Offensive Campaign Assessment", "url": "https://www.criticalthreats.org/analysis/russian-offensive-campaign-assessment-august-14-2026" },
+        { "label": "Kremlin: talks on 'deep pause' (Moscow Times)", "url": "https://www.themoscowtimes.com/2026/08/28/kremlin-says-ukraine-peace-talks-on-deep-pause-a93597" }
+      ],
+
+      "timeline": [
+        {
+          "id": "u01", "date": "2022-02-24", "actor": "Russia", "kind": "strike", "major": true,
+          "action": "Russia launches the full-scale invasion of Ukraine.",
+          "where": "Ukraine",
+          "source": "https://en.wikipedia.org/wiki/Russian_invasion_of_Ukraine"
+        },
+        {
+          "id": "u02", "date": "2026-01-01", "actor": "Ukraine", "kind": "strike",
+          "action": "Drone strike on hotels at Khorly kills 28 civilians during New Year celebrations.",
+          "where": "Kherson Oblast",
+          "source": "https://en.wikipedia.org/wiki/Timeline_of_the_Russo-Ukrainian_war_(1_January_2026_%E2%80%93_present)"
+        },
+        {
+          "id": "u03", "date": "2026-01-08", "actor": "Russia", "kind": "strike",
+          "action": "Oreshnik hypersonic missile strike on Lviv.",
+          "where": "Lviv",
+          "source": "https://en.wikipedia.org/wiki/Timeline_of_the_Russo-Ukrainian_war_(1_January_2026_%E2%80%93_present)"
+        },
+        {
+          "id": "u04", "date": "2026-01-14", "actor": "Russia", "kind": "strike", "major": true,
+          "action": "Russian forces cross the international border into Sumy Oblast and claim the seizure of Komarivka.",
+          "where": "Sumy Oblast",
+          "source": "https://en.wikipedia.org/wiki/Timeline_of_the_Russo-Ukrainian_war_(1_January_2026_%E2%80%93_present)"
+        },
+        {
+          "id": "u05", "date": "2026-01-23", "actor": "Mediation", "kind": "diplomacy", "major": true,
+          "action": "First trilateral Russia–US–Ukraine talks open in Abu Dhabi, covering disengagement of forces and ceasefire monitoring. A prisoner exchange of 314 people is completed.",
+          "where": "Abu Dhabi",
+          "source": "https://baike.baidu.com/en/item/2026%20Russia-Ukraine%20Peace%20Talks/1523882"
+        },
+        {
+          "id": "u06", "date": "2026-01-30", "actor": "Russia", "kind": "diplomacy", "retaliationFor": "u05",
+          "action": "Putin agrees to halt strikes on Kyiv until 1 February following a request from Trump.",
+          "where": "Moscow",
+          "source": "https://en.wikipedia.org/wiki/Timeline_of_the_Russo-Ukrainian_war_(1_January_2026_%E2%80%93_present)"
+        },
+        {
+          "id": "u07", "date": "2026-02-03", "actor": "Russia", "kind": "strike", "major": true,
+          "action": "Strike severely damages the Darnytsia thermal power station, cutting heat and power in the capital.",
+          "where": "Kyiv",
+          "source": "https://en.wikipedia.org/wiki/Timeline_of_the_Russo-Ukrainian_war_(1_January_2026_%E2%80%93_present)"
+        },
+        {
+          "id": "u08", "date": "2026-02-04", "actor": "Russia", "kind": "strike",
+          "action": "Russian forces capture Myrnohrad and Svitle.",
+          "where": "Donetsk Oblast",
+          "source": "https://en.wikipedia.org/wiki/Timeline_of_the_Russo-Ukrainian_war_(1_January_2026_%E2%80%93_present)"
+        },
+        {
+          "id": "u09", "date": "2026-02-04", "actor": "Mediation", "kind": "diplomacy",
+          "action": "Second Abu Dhabi round produces a one-week energy ceasefire under US pressure, but leaves territory unresolved.",
+          "where": "Abu Dhabi",
+          "source": "https://baike.baidu.com/en/item/2026%20Russia-Ukraine%20Peace%20Talks/1523882"
+        },
+        {
+          "id": "u10", "date": "2026-02-17", "actor": "Mediation", "kind": "diplomacy", "major": true,
+          "action": "Geneva round puts the territorial question on the agenda for the first time.",
+          "where": "Geneva",
+          "source": "https://baike.baidu.com/en/item/2026%20Russia-Ukraine%20Peace%20Talks/1523882"
+        },
+        {
+          "id": "u11", "date": "2026-03-05", "approx": true, "actor": "Mediation", "kind": "diplomacy",
+          "action": "A further Abu Dhabi round ends without result. Sources place this in early March; the exact date is unsettled.",
+          "where": "Abu Dhabi",
+          "source": "https://baike.baidu.com/en/item/2026%20Russia-Ukraine%20Peace%20Talks/1523882"
+        },
+        {
+          "id": "u12", "date": "2026-08-13", "actor": "Ukraine", "kind": "strike", "major": true,
+          "action": "Ukrainian deep strikes hit an oil refinery in Leningrad Oblast and a warehouse in Tver Oblast overnight.",
+          "where": "Leningrad and Tver Oblasts",
+          "source": "https://www.criticalthreats.org/analysis/russian-offensive-campaign-assessment-august-14-2026"
+        },
+        {
+          "id": "u13", "date": "2026-08-14", "actor": "Russia", "kind": "strike", "retaliationFor": "u12",
+          "action": "Russia launches 112 drones against Ukraine overnight. Lavrov rules out any ceasefire that freezes the current front line.",
+          "where": "Ukraine",
+          "source": "https://www.criticalthreats.org/analysis/russian-offensive-campaign-assessment-august-14-2026"
+        },
+        {
+          "id": "u14", "date": "2026-08-26", "actor": "Russia", "kind": "political", "major": true,
+          "action": "Putin moves to escalate the war after concluding that negotiations have reached a dead end, weighing intensified ballistic missile attacks on central Kyiv and infrastructure elsewhere.",
+          "where": "Moscow",
+          "source": "https://www.bloomberg.com/news/articles/2026-08-26/putin-moves-to-escalate-war-in-ukraine-with-talks-at-dead-end"
+        },
+        {
+          "id": "u15", "date": "2026-08-28", "actor": "Russia", "kind": "diplomacy", "major": true, "retaliationFor": "u14",
+          "action": "The Kremlin says peace talks are on a \"deep pause\" as Russian troops press the offensive in the east.",
+          "where": "Moscow",
+          "source": "https://www.themoscowtimes.com/2026/08/28/kremlin-says-ukraine-peace-talks-on-deep-pause-a93597"
+        },
+        {
+          "id": "u16", "date": "2026-09-01", "actor": "Russia", "kind": "strike", "major": true,
+          "action": "At least 12 people are killed in and around Kyiv on the sixth consecutive night of drone attacks. Zelenskyy says Moscow is exploiting a shortage of US-made Patriot interceptors.",
+          "where": "Kyiv",
+          "source": "https://www.theguardian.com/world/live/2026/sep/01/russia-ukraine-war-live"
+        }
+      ]
+    }  ],
+
+  "_watchlistNote": [
+    "Subjects followed by live feed activity only — no curated timeline, and so",
+    "no asserted facts. Their activity is measured as matching stories on the",
+    "wire in the last 24h. Promote one to `situations` by writing it a timeline."
+  ],
+
+  "watchlist": [
+    { "slug": "sudan",      "name": "Sudan",             "region": "Africa",       "keywords": ["sudan", "khartoum", "darfur", "rsf"] },
+    { "slug": "taiwan",     "name": "Taiwan Strait",     "region": "Asia-Pacific", "keywords": ["taiwan", "taipei", "taiwan strait"] },
+    { "slug": "korea",      "name": "Korean Peninsula",  "region": "Asia-Pacific", "keywords": ["north korea", "pyongyang", "kim jong"] },
+    { "slug": "myanmar",    "name": "Myanmar",           "region": "Asia-Pacific", "keywords": ["myanmar", "burma", "rohingya"] },
+    { "slug": "drc",        "name": "DR Congo",          "region": "Africa",       "keywords": ["congo", "kinshasa", "goma", "m23"] },
+    { "slug": "sahel",      "name": "Sahel",             "region": "Africa",       "keywords": ["sahel", "mali", "burkina faso", "niger junta"] },
+    { "slug": "yemen",      "name": "Yemen & Red Sea",   "region": "Middle East",  "keywords": ["yemen", "houthi", "red sea", "sanaa"] },
+    { "slug": "syria",      "name": "Syria",             "region": "Middle East",  "keywords": ["syria", "damascus", "syrian"] },
+    { "slug": "haiti",      "name": "Haiti",             "region": "Americas",     "keywords": ["haiti", "port-au-prince"] },
+    { "slug": "venezuela",  "name": "Venezuela",         "region": "Americas",     "keywords": ["venezuela", "caracas", "maduro"] },
+    { "slug": "ethiopia",   "name": "Ethiopia",          "region": "Africa",       "keywords": ["ethiopia", "addis ababa", "tigray", "amhara"] },
+    { "slug": "sahara",     "name": "Western Sahara",    "region": "Africa",       "keywords": ["western sahara", "polisario"] },
+    { "slug": "kashmir",    "name": "India–Pakistan",    "region": "Asia-Pacific", "keywords": ["kashmir", "india pakistan", "line of control"] }
+  ]
+}

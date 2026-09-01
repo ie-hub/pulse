@@ -1,0 +1,13 @@
+{
+  "name": "personal-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Personal situational-awareness board: wire, official government sources, hazards, commodities.",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

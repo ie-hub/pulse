@@ -1,0 +1,58 @@
+{
+  "_readme": [
+    "The daily scripture. One reference is chosen per calendar day by index, so",
+    "it is stable all day and changes at local midnight — not random per reload.",
+    "",
+    "Text is fetched from bible-api.com (free, no key) in the translation below.",
+    "`fallback` carries a few verses with their text so the spot still renders if",
+    "that service is unreachable. Add or reorder references freely."
+  ],
+
+  "translation": "kjv",
+
+  "references": [
+    "Psalm 23:1-4", "Psalm 27:1", "Psalm 46:1-3", "Psalm 46:10", "Psalm 91:1-2",
+    "Psalm 121:1-2", "Psalm 34:18", "Psalm 55:22", "Psalm 62:1-2", "Psalm 73:26",
+    "Psalm 103:2-4", "Psalm 118:24", "Psalm 119:105", "Psalm 130:5", "Psalm 139:23-24",
+    "Psalm 143:8", "Psalm 147:3", "Psalm 19:14", "Psalm 37:7", "Psalm 40:1-2",
+    "Proverbs 3:5-6", "Proverbs 4:23", "Proverbs 11:2", "Proverbs 12:25", "Proverbs 15:1",
+    "Proverbs 16:3", "Proverbs 16:9", "Proverbs 17:17", "Proverbs 18:10", "Proverbs 19:21",
+    "Proverbs 21:2", "Proverbs 22:1", "Proverbs 27:17", "Proverbs 28:1", "Proverbs 29:11",
+    "Proverbs 31:8-9", "Ecclesiastes 3:1", "Ecclesiastes 3:11", "Ecclesiastes 4:9-10",
+    "Ecclesiastes 7:8", "Ecclesiastes 9:11", "Ecclesiastes 12:13",
+    "Isaiah 40:8", "Isaiah 40:29-31", "Isaiah 41:10", "Isaiah 43:2", "Isaiah 26:3",
+    "Isaiah 1:17", "Isaiah 6:8", "Isaiah 9:6", "Isaiah 55:8-9", "Isaiah 58:6-7",
+    "Jeremiah 29:11", "Jeremiah 17:7-8", "Jeremiah 6:16", "Lamentations 3:22-23",
+    "Micah 6:8", "Habakkuk 3:17-19", "Zephaniah 3:17", "Joshua 1:9", "Deuteronomy 31:6",
+    "Exodus 14:14", "Numbers 6:24-26", "Deuteronomy 6:5", "1 Samuel 16:7",
+    "2 Chronicles 7:14", "Nehemiah 8:10", "Job 19:25", "Job 38:4", "Daniel 2:21",
+    "Matthew 5:3-6", "Matthew 5:9", "Matthew 5:14-16", "Matthew 6:19-21", "Matthew 6:33-34",
+    "Matthew 7:12", "Matthew 11:28-30", "Matthew 22:37-39", "Matthew 25:35-36",
+    "Matthew 28:19-20", "Mark 12:30-31", "Luke 6:31", "Luke 6:37", "Luke 12:15",
+    "Luke 16:10", "John 1:1-5", "John 3:16", "John 8:32", "John 13:34-35",
+    "John 14:6", "John 14:27", "John 15:13", "John 16:33",
+    "Acts 20:35", "Romans 5:3-5", "Romans 8:28", "Romans 8:38-39", "Romans 12:2",
+    "Romans 12:9-13", "Romans 12:18", "Romans 15:13",
+    "1 Corinthians 10:13", "1 Corinthians 13:4-7", "1 Corinthians 13:13", "1 Corinthians 16:14",
+    "2 Corinthians 4:16-18", "2 Corinthians 5:7", "2 Corinthians 9:7", "2 Corinthians 12:9",
+    "Galatians 5:22-23", "Galatians 6:9", "Ephesians 2:8-9", "Ephesians 4:29", "Ephesians 4:32",
+    "Ephesians 6:10-11", "Philippians 2:3-4", "Philippians 4:6-7", "Philippians 4:8",
+    "Philippians 4:13", "Colossians 3:12-14", "Colossians 3:23",
+    "1 Thessalonians 5:16-18", "2 Timothy 1:7", "2 Timothy 4:7", "Titus 3:2",
+    "Hebrews 4:12", "Hebrews 10:24-25", "Hebrews 11:1", "Hebrews 12:1-2", "Hebrews 13:5",
+    "James 1:2-4", "James 1:5", "James 1:19", "James 1:22", "James 2:17", "James 4:14",
+    "1 Peter 3:15", "1 Peter 4:10", "1 Peter 5:6-7", "2 Peter 3:9",
+    "1 John 1:9", "1 John 3:18", "1 John 4:7-8", "1 John 4:18", "Revelation 21:4"
+  ],
+
+  "fallback": [
+    { "reference": "Proverbs 3:5-6", "text": "Trust in the LORD with all thine heart; and lean not unto thine own understanding. In all thy ways acknowledge him, and he shall direct thy paths." },
+    { "reference": "Psalm 46:1", "text": "God is our refuge and strength, a very present help in trouble." },
+    { "reference": "Isaiah 41:10", "text": "Fear thou not; for I am with thee: be not dismayed; for I am thy God: I will strengthen thee; yea, I will help thee." },
+    { "reference": "Micah 6:8", "text": "He hath shewed thee, O man, what is good; and what doth the LORD require of thee, but to do justly, and to love mercy, and to walk humbly with thy God?" },
+    { "reference": "John 16:33", "text": "In the world ye shall have tribulation: but be of good cheer; I have overcome the world." },
+    { "reference": "Romans 12:18", "text": "If it be possible, as much as lieth in you, live peaceably with all men." },
+    { "reference": "Philippians 4:6-7", "text": "Be careful for nothing; but in every thing by prayer and supplication with thanksgiving let your requests be made known unto God." },
+    { "reference": "James 1:19", "text": "Wherefore, my beloved brethren, let every man be swift to hear, slow to speak, slow to wrath." }
+  ]
+}
