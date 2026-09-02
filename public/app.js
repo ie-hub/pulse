@@ -1306,7 +1306,7 @@ function hazardRow(e) {
 
 function renderClimate(host) {
   const climate = state.climate ?? [];
-  const hz = state.hazards ?? { events: [], errors: [], unavailable: [] };
+  const hz = state.hazards ?? { events: [], errors: [] };
   const qh = state.quakeHistory;
   const alerts = (state.hazard ?? []).filter((h) => h.outlet === 'NWS');
 
@@ -1360,8 +1360,6 @@ function renderClimate(host) {
     }),
     ...hz.errors.map((e) => el('p', { className: 'muted' },
       `${HAZARD_WORD[e.kind] ?? e.kind} unavailable. ${e.error} Nothing is shown in its place.`)),
-    ...hz.unavailable.map((u) => el('p', { className: 'muted' },
-      `${HAZARD_WORD[u.kind] ?? u.kind} not wired in. ${u.reason}`)),
   ]);
 
   // --- earthquakes, with history ---
