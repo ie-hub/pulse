@@ -35,6 +35,8 @@ const money = (n, currency = 'USD', digits = 2) => n.toLocaleString('en-US', {
 const num = (n, digits = 2) => n.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
 const pct = (n, digits = 1) => `${n >= 0 ? '+' : '−'}${Math.abs(n).toFixed(digits)}%`;
 const dirClass = (n) => (n == null ? '' : n >= 0 ? 'up' : 'down');
+// Timeline actions are prose, not headlines. Clipped so a row stays one row.
+const clip = (s, n) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
 
 const asDate = (iso) => new Date(`${iso}T12:00:00Z`);
 const fmtDate = (iso, opts = { month: 'short', day: 'numeric', year: 'numeric' }) =>
@@ -414,7 +416,7 @@ function attentionRows() {
     const line = latestStory
       ? { text: latestStory.title, meta: `${latestStory.outlets.join(' · ')} · ${ago(latestStory.time)}` }
       : latestEvent
-        ? { text: latestEvent.action.split(/(?<=\.)\s/)[0], meta: `${latestEvent.actor} · ${fmtDate(latestEvent.date)}` }
+        ? { text: clip(latestEvent.action.split(/(?<=\.)\s/)[0], 78), meta: `${latestEvent.actor} · ${fmtDate(latestEvent.date)}` }
         : null;
 
     return el('a', { className: 'row row-attention', href: subjectHref(s) }, [
@@ -537,30 +539,6 @@ function marketExplorer(markets) {
   return wrap;
 }
 
-// The article of the day, as a full-width strip above the greeting: label in a
-// left gutter, headline and summary running the whole measure. Beside the
-// greeting it competed with the verse for the same band and had to squeeze a
-// long official headline into half the width.
-function featureStrip() {
-  const f = state.feature;
-  if (!f?.title) return null;
-
-  return el('a', {
-    className: 'feature', href: f.link, target: '_blank', rel: 'noopener noreferrer',
-  }, [
-    el('span', { className: 'feature-label' }, 'Article of the day'),
-    el('div', { className: 'feature-body' }, [
-      el('h2', { className: 'feature-title' }, f.title),
-      f.summary ? el('p', { className: 'feature-sum' }, f.summary) : null,
-      el('div', { className: 'feature-meta' }, [
-        f.outlet,
-        f.time ? ` · ${ago(f.time)}` : '',
-        f.basis === 'carried' && f.why ? ` · ${f.why}` : '',
-      ]),
-    ]),
-  ]);
-}
-
 function renderPulse(host) {
   const markets = state.markets ?? [];
   const quakes = (state.hazard ?? []).filter((h) => h.outlet === 'USGS');
@@ -660,7 +638,7 @@ function renderPulse(host) {
     ]),
   ]);
 
-  host.replaceChildren(...[featureStrip(), greeting, attention, marketsSection, govSection, climate].filter(Boolean));
+  host.replaceChildren(greeting, attention, marketsSection, govSection, climate);
   // These measure their containers, so they paint only once they are in the DOM.
   explorer?.paintChart?.();
   debt.paintChart?.();
@@ -718,7 +696,7 @@ function renderWorld(host) {
           activityBar(a.score, a.level, max),
           trendEl(a.trend),
           el('span', { className: `level level-${a.level}` }, a.level),
-          el('span', { className: 'detail' }, detail.length > 78 ? `${detail.slice(0, 78)}…` : detail),
+          el('span', { className: 'detail' }, clip(detail, 78)),
         ]);
       }),
     ]),
@@ -1527,12 +1505,7 @@ async function refresh() {
 
   state = next;
   lastGood = state.generatedAt;
-  const live = state.status.filter((s) => s.ok).length;
   $('clock').textContent = `${dayFmt.format(new Date(state.generatedAt))} · ${clockFmt.format(new Date(state.generatedAt))}`;
-  // Silent when everything is reporting; an outage is the only thing worth the
-  // space, and it still has to be visible.
-  const down = state.status.length - live;
-  $('health').textContent = down ? `${down} of ${state.status.length} sources not reporting` : '';
 
   // A rendering fault is this app's bug, not the sources'. Reporting it as
   // "stale" sent me hunting a data problem that did not exist.
