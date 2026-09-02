@@ -16,6 +16,7 @@ import { recordHistory } from './lib/history.mjs';
 import { dailyScripture } from './lib/scripture.mjs';
 import { climateState } from './lib/climate.mjs';
 import { activeHazards, earthquakeHistory } from './lib/hazards.mjs';
+import { usMigration, internationalComparison } from './lib/migration.mjs';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(ROOT, 'public');
@@ -71,7 +72,7 @@ async function loadSituations() {
 
 export async function buildState() {
   const [feedEntries, marketsEntry, situations, scripture, debtEntry, aidEntry, defenseEntry,
-    climateEntry, quakeHistoryEntry, hazardsEntry] = await Promise.all([
+    climateEntry, quakeHistoryEntry, hazardsEntry, migrationEntry, migrationIntlEntry] = await Promise.all([
     Promise.all(SOURCES.map(async (s) => [s, await cached(s.id, TTL.feed, () => loadSource(s))])),
     cached('markets', TTL.market, loadMarkets),
     loadSituations(),
@@ -86,6 +87,10 @@ export async function buildState() {
     cached('quakeHistory', 6 * 60 * 60 * 1000, earthquakeHistory),
     // Active hazards do change through the day, so they follow the feed TTL.
     cached('hazards', TTL.feed, activeHazards),
+    // Annual, revised a few times a year. Twelve hours is already far more
+    // often than either publisher changes anything.
+    cached('migration', 12 * 60 * 60 * 1000, usMigration),
+    cached('migrationIntl', 12 * 60 * 60 * 1000, internationalComparison),
   ]);
 
   const status = [];
@@ -197,6 +202,10 @@ export async function buildState() {
     quakeHistoryError: quakeHistoryEntry.error ?? null,
     hazards: hazardsEntry.data ?? null,
     hazardsError: hazardsEntry.error ?? null,
+    migration: migrationEntry.data ?? null,
+    migrationError: migrationEntry.error ?? null,
+    migrationIntl: migrationIntlEntry.data ?? null,
+    migrationIntlError: migrationIntlEntry.error ?? null,
     hazard,
     status,
   };

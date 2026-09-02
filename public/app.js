@@ -1573,12 +1573,119 @@ function renderWatched(host, slug) {
 
 // ---- chrome & routing -----------------------------------------------------
 
+// ---- immigration ----------------------------------------------------------
+
+const bigPeople = (n) => {
+  const a = Math.abs(n);
+  if (a >= 1e6) return `${(n / 1e6).toFixed(2)}M`;
+  if (a >= 1e3) return `${Math.round(n / 1e3)}k`;
+  return String(Math.round(n));
+};
+
+// Neutral by construction. Direction is stated as a movement, never as good or
+// bad — more migration is not an improvement and less is not a decline.
+const movement = (pct) => (pct == null ? '' : `${pct >= 0 ? 'increased' : 'decreased'} ${Math.abs(pct).toFixed(pct >= 10 || pct <= -10 ? 0 : 1)}%`);
+
+function migrationRow(m) {
+  return el('div', { className: 'mig-row' }, [
+    el('span', { className: 'mig-name' }, [
+      m.label,
+      infoTip(
+        el('b', {}, 'Definition. '), m.definition, ' ',
+        el('b', {}, 'Period. '), `${m.period}, ${m.period_type}. `,
+        el('b', {}, 'Source. '), ext(m.source.url, m.source.name), ` · ${m.source.type}`,
+        m.source.cadence ? ` · ${m.source.cadence}` : '', '.',
+        m.source.updated ? ` Publisher last revised ${m.source.updated}.` : '',
+      ),
+    ]),
+    el('span', { className: 'n mig-val' }, [
+      m.unit === '%' ? `${m.value.toFixed(m.decimals)}%` : bigPeople(m.value),
+    ]),
+    el('span', { className: 'mig-period muted' }, m.period),
+    el('span', { className: 'mig-chg' }, m.changePriorPct != null ? movement(m.changePriorPct) : ''),
+    el('span', { className: 'mig-long muted' },
+      m.change10yPct != null ? `${movement(m.change10yPct)} over ${m.change10ySpan} years` : ''),
+    el('span', { className: 'spark-cell' },
+      sparkline({ history: (m.series ?? []).map((p) => p.c), changePct: 1 }, 84, 18)),
+    el('span', { className: 'mig-stand muted' }, m.standing ?? ''),
+  ]);
+}
+
+function migrationGroup(title, note, rows) {
+  if (!rows?.length) return [];
+  return [subLabel(title, note), ...rows.map(migrationRow)];
+}
+
+function renderImmigration(host) {
+  const mig = state.migration;
+  const intl = state.migrationIntl;
+
+  if (!mig) {
+    host.replaceChildren(el('section', { className: 'section' }, [
+      sectionLabel('Immigration', 'unavailable'),
+      el('p', { className: 'muted' },
+        `No figures available. ${state.migrationError ?? ''} Nothing is shown in their place.`),
+    ]));
+    return;
+  }
+
+  const usSection = el('section', { className: 'section' }, [
+    (() => {
+      const l = sectionLabel('United States', 'stock, flow and protection — three different things');
+      l.append(infoTip(
+        el('b', {}, 'These rows do not add up, and are not meant to. '),
+        'A migrant stock is how many foreign-born people are present at a moment. Net migration is '
+        + 'arrivals minus departures over a year. A pending asylum caseload is how many claims are '
+        + 'awaiting a decision. None is a count of people admitted, and none can be substituted for '
+        + 'another. ',
+        el('b', {}, 'All periods here are calendar years, '),
+        'not the federal fiscal year that US administrative immigration data uses. ',
+        el('b', {}, 'Direction is stated neutrally: '),
+        'an increase in any of these is neither good nor bad.',
+      ));
+      return l;
+    })(),
+    ...migrationGroup('Population present', 'point-in-time stock', mig.stock),
+    ...migrationGroup('Annual flow', 'arrivals minus departures', mig.flow),
+    ...migrationGroup('Protection', 'end-of-year caseload', mig.protection),
+    ...(mig.errors ?? []).map((e) => el('p', { className: 'muted' },
+      `A measure could not be loaded. ${e} Nothing is shown in its place.`)),
+  ]);
+
+  const intlSection = intl ? el('section', { className: 'section' }, [
+    (() => {
+      const l = sectionLabel('International comparison', `${intl.countries.length} countries, migrant stock`);
+      l.append(infoTip(
+        el('b', {}, 'Comparable because it is one definition. '), intl.definition, ' ',
+        el('b', {}, 'Source. '), ext(intl.source.url, intl.source.name),
+        ` · ${intl.source.type} · ${intl.source.cadence}.`,
+      ));
+      return l;
+    })(),
+    ...(() => {
+      const max = Math.max(...intl.countries.map((c) => c.stock), 1);
+      return intl.countries.map((c) => el('div', { className: `mig-cmp${c.iso === 'USA' ? ' is-us' : ''}` }, [
+        el('span', { className: 'cmp-name' }, c.name),
+        el('span', { className: 'cmp-bar' }, el('span', {
+          className: 'cmp-fill', style: `width:${((c.stock / max) * 100).toFixed(1)}%`,
+        })),
+        el('span', { className: 'n cmp-val' }, bigPeople(c.stock)),
+        el('span', { className: 'n cmp-share muted' }, c.share != null ? `${c.share.toFixed(1)}%` : '—'),
+        el('span', { className: 'cmp-year muted' }, String(c.year)),
+      ]));
+    })(),
+  ]) : null;
+
+  host.replaceChildren(...[usSection, intlSection].filter(Boolean));
+}
+
 const NAV = [
   { hash: '#/', label: 'Pulse' },
   { hash: '#/world', label: 'World' },
   { hash: '#/markets', label: 'Markets' },
   { hash: '#/government', label: 'Government' },
   { hash: '#/climate', label: 'Climate' },
+  { hash: '#/immigration', label: 'Immigration' },
   { hash: '#/indiana', label: 'Indiana' },
 ];
 
@@ -1594,7 +1701,7 @@ function renderNav() {
 const ROUTES = {
   '#/': renderPulse, '#/world': renderWorld, '#/markets': renderMarkets,
   '#/government': renderGovernment, '#/climate': renderClimate,
-  '#/indiana': renderIndiana,
+  '#/immigration': renderImmigration, '#/indiana': renderIndiana,
 };
 
 function route() {
