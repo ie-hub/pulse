@@ -448,7 +448,7 @@ function timeOfDay(d = new Date()) {
 // groups are the axis people actually think in ("how's oil", "how's gold").
 // Reuses drawChart, so this is the same rendering the board's own detail uses.
 function marketExplorer(markets) {
-  const groups = MKT_GROUPS.filter((g) => markets.some((m) => m.group === g && m.series?.length));
+  const groups = MKT_GROUPS.filter((g) => markets.some((m) => m.group === g));
   if (!groups.length) return null;
 
   let group = groups[0];
@@ -462,6 +462,14 @@ function marketExplorer(markets) {
   const caption = el('div', { className: 'picker-cap muted' });
 
   const paint = () => {
+    // An instrument with no history is still an instrument. Say why it has none
+    // rather than drawing an empty box.
+    if (!pick.series?.length) {
+      chartWrap.replaceChildren(el('p', { className: 'muted' },
+        `No history available. ${pick.error ?? ''} Nothing is shown in its place.`));
+      caption.replaceChildren(`${pick.name} · unavailable`);
+      return;
+    }
     const from = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
     drawChart(chartWrap, pick, [], from, 200);
     caption.replaceChildren(
@@ -474,10 +482,19 @@ function marketExplorer(markets) {
 
   const showGroup = (g) => {
     group = g;
-    const rows = markets.filter((m) => m.group === group && m.series?.length);
-    pick = rows[0];
+    // Every instrument in the group, including any that failed to load. Dropping
+    // them made a source outage look like the instrument had never existed —
+    // fed funds vanished from Rates entirely, and a bad LBMA fetch took gold and
+    // silver out of Metals. Open on the first one that has history, so the chart
+    // is not empty on arrival.
+    const rows = markets.filter((m) => m.group === group);
+    pick = rows.find((m) => m.series?.length) ?? rows[0];
     instrRow.replaceChildren(...rows.map((m) => {
-      const b = el('button', { type: 'button', className: m === pick ? 'is-on' : '' }, m.name);
+      const cls = [m === pick ? 'is-on' : '', m.series?.length ? '' : 'is-out'].filter(Boolean).join(' ');
+      const b = el('button', {
+        type: 'button', className: cls,
+        title: m.series?.length ? '' : `No history — ${m.error ?? 'source unavailable'}`,
+      }, m.name);
       b.addEventListener('click', () => {
         pick = m;
         instrRow.querySelectorAll('button').forEach((x) => x.classList.remove('is-on'));
@@ -1510,7 +1527,10 @@ async function refresh() {
   lastGood = state.generatedAt;
   const live = state.status.filter((s) => s.ok).length;
   $('clock').textContent = `${dayFmt.format(new Date(state.generatedAt))} · ${clockFmt.format(new Date(state.generatedAt))}`;
-  $('health').textContent = `${live}/${state.status.length} sources`;
+  // Silent when everything is reporting; an outage is the only thing worth the
+  // space, and it still has to be visible.
+  const down = state.status.length - live;
+  $('health').textContent = down ? `${down} of ${state.status.length} sources not reporting` : '';
 
   // A rendering fault is this app's bug, not the sources'. Reporting it as
   // "stale" sent me hunting a data problem that did not exist.

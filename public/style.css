@@ -150,6 +150,8 @@ a { color: inherit; text-decoration: none; }
   margin-top: 6px; font-size: 12px;
 }
 .picker-cap .regime { text-align: left; }
+/* An instrument with no history stays listed, marked rather than removed. */
+.picker-instr button.is-out { color: var(--dim); text-decoration: line-through; }
 
 /* the daily verse — quiet, set in the reading face, no container */
 .scripture { margin: 16px 0 0; max-width: 62ch; }
