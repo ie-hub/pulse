@@ -254,7 +254,13 @@ a { color: inherit; text-decoration: none; }
 
 .matrix-head, .matrix-row {
   display: grid;
-  grid-template-columns: minmax(150px, 1.4fr) 108px 96px 20px 68px minmax(0, 1.5fr);
+  /* Measured against the real rows, not guessed: the widest subject needs
+     121px and the widest region 82px, while the latest-development text wants
+     561px and was being truncated at 377. Subject was taking 351px of flex to
+     hold a 121px name, opening a dead gap between it and Region. Everything
+     that has a natural ceiling is capped there; the detail column takes the
+     slack, because it is the only one whose content grows. */
+  grid-template-columns: minmax(140px, 200px) 92px 96px 20px 60px minmax(0, 1fr);
   gap: 16px;
   align-items: baseline;
 }
