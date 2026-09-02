@@ -630,14 +630,14 @@ function renderPulse(host) {
 
   // --- column one: the front lines ---
   const colOne = el('div', { className: 'bs-col' }, [
-    bsHead('Front lines', 'ranked by activity', '#/world', 'World →'),
+    bsHead('Geopolitics', null, '#/world', 'All subjects →'),
     lead ? bsLead(lead) : null,
     ...rest.slice(0, 4).map((s) => bsFrontRow(s, max)),
   ]);
 
   // --- column two: what the numbers say ---
   const colTwo = el('div', { className: 'bs-col bs-ruled' }, [
-    bsHead('Markets', 'interpretation', '#/markets', 'Full board →'),
+    bsHead('Markets', null, '#/markets', 'Full board →'),
     ...(state.whatMatters ?? []).map((n) => el('p', { className: 'bs-note' }, [
       n.text, el('em', {}, n.evidence),
     ])),
@@ -649,7 +649,7 @@ function renderPulse(host) {
     .sort((a, b) => Math.abs(b.regime.z ?? 0) - Math.abs(a.regime.z ?? 0))
     .slice(0, 5);
   const colThree = el('div', { className: 'bs-col bs-ruled' }, [
-    bsHead('Signals', 'derived here'),
+    bsHead('Signals'),
     ...(state.signals ?? []).map((s) => el('div', { className: 'bs-kv', title: s.basis }, [
       el('span', {}, s.label), el('b', {}, s.value),
     ])),
@@ -739,7 +739,7 @@ function renderWorld(host) {
   host.replaceChildren(
     el('section', { className: 'section' }, [
       (() => {
-        const l = sectionLabel('Conflicts & geopolitics', `${active} active of ${subjects.length} followed`);
+        const l = sectionLabel('Geopolitics', `${active} active of ${subjects.length} followed`);
         l.append(infoTip(
           'Subjects with a curated timeline carry measured week-on-week trends. The rest are followed by '
           + 'wire coverage only — their level reflects today’s reporting volume, and they show no trend '
@@ -1789,7 +1789,7 @@ function renderImmigration(host) {
 }
 
 const NAV = [
-  { hash: '#/world', label: 'World' },
+  { hash: '#/world', label: 'Geopolitics' },
   { hash: '#/indiana', label: 'Indiana' },
   { hash: '#/markets', label: 'Markets' },
   { hash: '#/government', label: 'Government' },
