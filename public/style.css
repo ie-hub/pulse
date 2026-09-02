@@ -109,33 +109,25 @@ a { color: inherit; text-decoration: none; }
 }
 .greeting p { margin: 0; font-size: 13.5px; color: var(--mid); }
 
-/* Greeting and the day's article side by side. Scoped to the Pulse page so
-   the greeting rules above stay exactly as they are everywhere else. */
-.pulse-top {
-  display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  gap: 0 56px; align-items: start;
-}
-.pulse-top .greeting { padding-bottom: 0; }
-
-/* Outlined so it reads as a separate object. It sat in the same serif at a
-   similar size as the greeting and verse beside it, so the eye ran the three
-   together as one block of prose. The rule, the ground and a sans-serif
-   headline give it its own texture — no shadow, no fill beyond the raise. */
+/* The day's article: a full-width strip above the greeting. Label in a left
+   gutter, matching how the rest of the page announces things; the headline
+   gets the whole measure, which a long official title needs. No box — the
+   rules do the separating, as everywhere else. */
 .feature {
-  display: block; margin-top: 40px; padding: 16px 18px 15px;
-  border: 1px solid var(--line); border-radius: 8px; background: var(--raise);
+  display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 0 28px;
+  padding: 26px 0 20px; border-bottom: 1px solid var(--line);
 }
-.feature:hover { border-color: var(--dim); }
 .feature-label {
-  display: flex; align-items: baseline; gap: 10px;
-  font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim);
+  font-size: 11.5px; font-weight: 700; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--heading);
 }
 .feature-title {
-  margin: 8px 0 0;
-  font-size: 16px; font-weight: 500; line-height: 1.35; color: var(--ink);
+  margin: 0;
+  font-family: var(--serif); font-size: 22px; font-weight: 400;
+  line-height: 1.26; letter-spacing: -0.005em; color: var(--ink);
 }
 .feature:hover .feature-title { color: var(--accent); }
-.feature-sum { margin: 7px 0 0; font-size: 13px; line-height: 1.55; color: var(--mid); }
+.feature-sum { margin: 8px 0 0; font-size: 13.5px; line-height: 1.55; color: var(--mid); max-width: 82ch; }
 .feature-meta { margin-top: 8px; font-size: 12px; color: var(--dim); }
 
 /* Steerable chart on the Pulse page: group, then instrument, then the chart. */
@@ -666,8 +658,8 @@ a { color: inherit; text-decoration: none; }
 
 @media (max-width: 900px) {
   :root { --pad: 20px; }
-  .quad, .triad, .two-col, .pulse-top { grid-template-columns: minmax(0, 1fr); gap: 0; }
-  .feature { padding-top: 22px; }
+  .quad, .triad, .two-col { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .feature { grid-template-columns: minmax(0, 1fr); gap: 8px 0; }
 
   .row-attention { grid-template-columns: minmax(0, 1fr) 70px 16px; }
   .row-attention .level, .row-attention .detail { display: none; }

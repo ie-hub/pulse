@@ -537,27 +537,26 @@ function marketExplorer(markets) {
   return wrap;
 }
 
-// The article of the day, beside the greeting. It states how it was chosen —
-// a hand-picked article and a widely-carried one are different claims, and the
-// reader should not have to guess which this is.
-function featureCard() {
+// The article of the day, as a full-width strip above the greeting: label in a
+// left gutter, headline and summary running the whole measure. Beside the
+// greeting it competed with the verse for the same band and had to squeeze a
+// long official headline into half the width.
+function featureStrip() {
   const f = state.feature;
   if (!f?.title) return null;
 
   return el('a', {
     className: 'feature', href: f.link, target: '_blank', rel: 'noopener noreferrer',
   }, [
-    el('div', { className: 'feature-label' }, [
-      el('span', {}, 'Article of the day'),
-    ]),
-    el('h2', { className: 'feature-title' }, f.title),
-    f.summary ? el('p', { className: 'feature-sum' }, f.summary) : null,
-    // `why` only earns its place on an automatic pick, where it says how many
-    // outlets carried the story. On a pinned one the label already said it.
-    el('div', { className: 'feature-meta' }, [
-      f.outlet,
-      f.time ? ` · ${ago(f.time)}` : '',
-      f.basis === 'carried' && f.why ? ` · ${f.why}` : '',
+    el('span', { className: 'feature-label' }, 'Article of the day'),
+    el('div', { className: 'feature-body' }, [
+      el('h2', { className: 'feature-title' }, f.title),
+      f.summary ? el('p', { className: 'feature-sum' }, f.summary) : null,
+      el('div', { className: 'feature-meta' }, [
+        f.outlet,
+        f.time ? ` · ${ago(f.time)}` : '',
+        f.basis === 'carried' && f.why ? ` · ${f.why}` : '',
+      ]),
     ]),
   ]);
 }
@@ -579,8 +578,6 @@ function renderPulse(host) {
       ]),
     ]) : null,
   ]);
-
-  const top = el('div', { className: 'pulse-top' }, [greeting, featureCard()]);
 
   const attention = el('section', { className: 'section' }, [
     sectionLabel('Front lines', 'ranked by activity — recency, significance and change'),
@@ -663,7 +660,7 @@ function renderPulse(host) {
     ]),
   ]);
 
-  host.replaceChildren(top, attention, marketsSection, govSection, climate);
+  host.replaceChildren(...[featureStrip(), greeting, attention, marketsSection, govSection, climate].filter(Boolean));
   // These measure their containers, so they paint only once they are in the DOM.
   explorer?.paintChart?.();
   debt.paintChart?.();
