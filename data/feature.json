@@ -1,0 +1,10 @@
+{
+  "_comment": "The article surfaced on the Pulse page. `pinned` wins when set; clear it (null) and the day's most widely carried wire story is chosen instead. Re-read on every request, so a save shows up on reload.",
+  "pinned": {
+    "title": "Governor Braun Announces Launch of Iron Nation–Indiana to Drive Innovation, Investment and Economic Growth",
+    "link": "https://iedc.in.gov/events/news/details/2026/04/13/governor-braun-announces-launch-of-iron-nation-indiana-to-drive-innovation-investment-and-economic-growth",
+    "outlet": "Indiana Econ Dev",
+    "date": "2026-04-13",
+    "summary": "Governor Mike Braun announced the launch of Iron Nation–Indiana, a programme to drive innovation, investment and economic growth in the state."
+  }
+}

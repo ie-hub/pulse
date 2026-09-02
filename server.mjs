@@ -14,10 +14,12 @@ import { clusterStories } from './lib/cluster.mjs';
 import { scoreSubject, domainPulse } from './lib/activity.mjs';
 import { recordHistory } from './lib/history.mjs';
 import { dailyScripture } from './lib/scripture.mjs';
+import { chooseFeature } from './lib/feature.mjs';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(ROOT, 'public');
 const SITUATIONS = path.join(ROOT, 'data', 'situations.json');
+const FEATURE = path.join(ROOT, 'data', 'feature.json');
 const HISTORY = path.join(ROOT, 'data', 'pulse-history.json');
 const SCRIPTURE = path.join(ROOT, 'data', 'scripture.json');
 const PORT = Number(process.env.PORT) || 4173;
@@ -67,7 +69,18 @@ async function loadSituations() {
   }
 }
 
-export async function buildState() {
+export // Re-read per request like situations.json, so editing the pin and reloading
+// is enough. A missing or malformed file is not an error worth failing on —
+// it just means nothing is pinned and the automatic pick takes over.
+async function loadPinnedFeature() {
+  try {
+    return JSON.parse(await fs.readFile(FEATURE, 'utf8')).pinned ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function buildState() {
   const [feedEntries, marketsEntry, situations, scripture, debtEntry, aidEntry, defenseEntry] = await Promise.all([
     Promise.all(SOURCES.map(async (s) => [s, await cached(s.id, TTL.feed, () => loadSource(s))])),
     cached('markets', TTL.market, loadMarkets),
@@ -120,6 +133,7 @@ export async function buildState() {
   }
 
   const wire = clusterStories(lanes.wire).slice(0, 40);
+  const feature = chooseFeature(await loadPinnedFeature(), wire);
   const official = roundRobin(lanes.official, 6).slice(0, 40);
 
   // A locality view needs its own slice rather than a filter over the two
@@ -181,6 +195,7 @@ export async function buildState() {
     wire,
     official,
     places,
+    feature,
     hazard,
     status,
   };

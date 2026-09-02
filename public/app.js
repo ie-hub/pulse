@@ -432,19 +432,8 @@ function attentionRows() {
 }
 
 // Stories the tracked and watched subjects do not account for — the rest of the
-// world, so this section says something Attention does not.
-function elsewhereStories(limit = 8) {
-  const subjects = allSubjects();
-  const norm = (t) => t.toLowerCase().replace(/[^a-z0-9\s]/g, ' ');
-  const claimed = (title) => subjects.some((x) =>
-    (x.keywords ?? []).some((k) => norm(title).includes(k.toLowerCase())));
-  return (state.wire ?? []).filter((w) => !claimed(w.title)).slice(0, limit);
-}
 
-// The greeting. "Hello" is dead space at the top of a board whose whole job is
-// to say what is happening, so it says something — but only measured things:
-// levels come from scored subjects, the market note from an instrument's
-// z-score against its own 90-day range, the same number the board labels.
+// The greeting is a plain salutation; the board below it does the reporting.
 function timeOfDay(d = new Date()) {
   const h = d.getHours();
   if (h < 5) return 'Late night';
@@ -454,40 +443,35 @@ function timeOfDay(d = new Date()) {
   return 'Late evening';
 }
 
-function greetingNote() {
-  const parts = [];
+// The article of the day, beside the greeting. It states how it was chosen —
+// a hand-picked article and a widely-carried one are different claims, and the
+// reader should not have to guess which this is.
+function featureCard() {
+  const f = state.feature;
+  if (!f?.title) return null;
 
-  const high = allSubjects().filter((s) => s.activity?.level === 'high');
-  if (high.length) {
-    const rising = high.filter((s) => s.activity?.trend === 'up').length;
-    const noun = high.length === 1 ? 'front' : 'fronts';
-    const trend = rising === 0 ? ''
-      : rising < high.length ? `, ${rising} rising`
-        : high.length === 1 ? ', rising'
-          : high.length === 2 ? ', both rising'
-            : ', all rising';
-    parts.push(`${high.length} ${noun} at high activity${trend}`);
-  }
-
-  // The single most unusual instrument, by how far today's move sits from its
-  // own distribution — not by the size of the move.
-  const odd = (state.markets ?? [])
-    .filter((m) => m.regime && m.regime.label !== 'normal' && m.changePct != null && m.regime.z != null)
-    .sort((a, b) => Math.abs(b.regime.z) - Math.abs(a.regime.z))[0];
-  if (odd) parts.push(`${odd.name.toLowerCase()} ${odd.regime.label} at ${pct(odd.changePct)}`);
-
-  const down = (state.status ?? []).filter((s) => !s.ok).length;
-  if (down) parts.push(`${down} source${down === 1 ? '' : 's'} not reporting`);
-
-  // Say so plainly rather than inventing something to report.
-  return parts.length ? `${parts.join(' · ')}.` : 'Nothing unusual on the board.';
+  return el('a', {
+    className: 'feature', href: f.link, target: '_blank', rel: 'noopener noreferrer',
+  }, [
+    el('div', { className: 'feature-label' }, [
+      el('span', {}, 'Article of the day'),
+      el('span', { className: 'feature-basis' }, f.basis === 'pinned' ? 'picked by hand' : 'most carried'),
+    ]),
+    el('h2', { className: 'feature-title' }, f.title),
+    f.summary ? el('p', { className: 'feature-sum' }, f.summary) : null,
+    // `why` only earns its place on an automatic pick, where it says how many
+    // outlets carried the story. On a pinned one the label already said it.
+    el('div', { className: 'feature-meta' }, [
+      f.outlet,
+      f.time ? ` · ${ago(f.time)}` : '',
+      f.basis === 'carried' && f.why ? ` · ${f.why}` : '',
+    ]),
+  ]);
 }
 
 function renderPulse(host) {
   const domains = state.domains ?? [];
   const markets = state.markets ?? [];
-  const movers = markets.filter((m) => m.changePct != null)
-    .sort((a, b) => Math.abs(b.changePct) - Math.abs(a.changePct));
   const bodies = [...new Set((state.official ?? []).map((o) => o.outlet))];
   const quakes = (state.hazard ?? []).filter((h) => h.outlet === 'USGS');
   const alerts = (state.hazard ?? []).filter((h) => h.outlet === 'NWS');
@@ -495,7 +479,6 @@ function renderPulse(host) {
   const verse = state.scripture;
   const greeting = el('div', { className: 'greeting' }, [
     el('h1', {}, timeOfDay()),
-    el('p', {}, greetingNote()),
     verse?.text ? el('figure', { className: 'scripture' }, [
       el('blockquote', {}, verse.text),
       el('figcaption', {}, [
@@ -506,37 +489,53 @@ function renderPulse(host) {
     ]) : null,
   ]);
 
+  const top = el('div', { className: 'pulse-top' }, [greeting, featureCard()]);
+
   const attention = el('section', { className: 'section' }, [
     sectionLabel('Front lines', 'ranked by activity — recency, significance and change',
       domains.every((d) => d.trend === 'unknown') ? 'trend baselines still building' : null),
     ...attentionRows(),
   ]);
 
-  const elsewhere = elsewhereStories();
-  const rest = el('section', { className: 'section' }, [
-    sectionLabel('The wire', 'stories the front lines do not account for'),
-    ...(elsewhere.length
-      ? elsewhere.map((w) => el('a', {
-        className: 'change', href: w.outlets[0].link, target: '_blank', rel: 'noopener noreferrer',
+  // Markets, grouped as the board groups them, in the slot the wire used to
+  // hold. One row per instrument: value, change, and how the move sits against
+  // that instrument's own 90-day range — the same regime label the full board
+  // uses, so the front page and the domain view cannot disagree.
+  const reporting = markets.filter((m) => m.value != null);
+  const boardSnap = el('section', { className: 'section' }, [
+    (() => {
+      const l = sectionLabel('Markets', `${reporting.length} of ${markets.length} instruments reporting`,
+        el('a', { href: '#/markets' }, 'Full board →'));
+      l.insertBefore(infoTip(
+        el('b', {}, 'Sources by instrument. '),
+        'U.S. Treasury (par yields, official daily) · Cboe (VIX, official close) · LBMA (gold and silver '
+        + 'benchmark) · exchange-derived quotes via Yahoo Finance for the rest, which are delayed. Nothing '
+        + 'here is real-time. ',
+        el('b', {}, 'Unusual '),
+        'compares an instrument’s move with its own 90-day range, so it means unusual for that instrument, '
+        + 'not large in the abstract.',
+      ), l.querySelector('.right'));
+      return l;
+    })(),
+    ...MKT_GROUPS.flatMap((group) => {
+      const rows = markets.filter((m) => m.group === group);
+      if (!rows.length) return [];
+      return [groupLabel(group), ...rows.map((m) => el('a', {
+        className: `snap-row${m.value == null ? ' is-out' : ''}`, href: '#/markets',
       }, [
-        el('span', { className: 'change-title' }, w.title),
-        el('span', { className: 'change-meta' },
-          `${w.outlets.map((o) => o.outlet).join(' · ')} · ${ago(w.time)}`),
-      ]))
-      : [el('p', { className: 'muted' }, 'Everything on the wire maps to a subject you follow.')]),
+        el('span', { className: 'snap-name' }, m.name),
+        el('span', { className: 'n snap-val' }, fmtValue(m)),
+        el('span', { className: `n ${changeClass(m, 'd1')}` }, fmtChange(m, 'd1')),
+        el('span', { className: 'spark-cell' }, m.series?.length ? sparkline(m, 72, 16) : ''),
+        el('span', { className: `regime regime-${m.regime?.label ?? 'unknown'}` },
+          m.value == null ? 'unavailable' : m.regime?.label ?? ''),
+      ]))];
+    }),
   ]);
 
   const overview = el('section', { className: 'section' }, [
     sectionLabel('The board'),
-    el('div', { className: 'triad' }, [
-      el('div', {}, [
-        subLabel('Markets', el('a', { href: '#/markets' }, 'All →')),
-        ...movers.slice(0, 6).map((m) => el('a', { className: 'mini', href: '#/markets' }, [
-          el('span', { className: 'mini-name' }, m.label),
-          el('span', { className: 'spark-cell' }, sparkline(m, 60, 14)),
-          el('span', { className: `mini-val ${dirClass(m.changePct)}` }, pct(m.changePct, 2)),
-        ])),
-      ]),
+    el('div', { className: 'two-col' }, [
       el('div', {}, [
         subLabel('Government', el('a', { href: '#/government' }, 'All →')),
         ...bodies.slice(0, 6).map((b) => {
@@ -567,7 +566,7 @@ function renderPulse(host) {
     ]),
   ]);
 
-  host.replaceChildren(greeting, attention, rest, overview);
+  host.replaceChildren(top, attention, boardSnap, overview);
 }
 
 // ---- level 2: domains -----------------------------------------------------

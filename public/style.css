@@ -107,6 +107,46 @@ a { color: inherit; text-decoration: none; }
 }
 .greeting p { margin: 0; font-size: 13.5px; color: var(--mid); }
 
+/* Greeting and the day's article side by side. Scoped to the Pulse page so
+   the greeting rules above stay exactly as they are everywhere else. */
+.pulse-top {
+  display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 0 56px; align-items: start;
+}
+.pulse-top .greeting { padding-bottom: 0; }
+
+.feature { display: block; padding: 40px 0 4px; }
+.feature-label {
+  display: flex; align-items: baseline; gap: 10px;
+  font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim);
+}
+/* How it was chosen, said plainly rather than implied. */
+.feature-basis { color: var(--mid); }
+.feature-basis::before { content: '· '; color: var(--line); }
+.feature-title {
+  margin: 9px 0 0;
+  font-family: var(--serif); font-size: 20px; font-weight: 400;
+  line-height: 1.28; letter-spacing: -0.005em; color: var(--ink);
+}
+.feature:hover .feature-title { color: var(--accent); }
+.feature-sum { margin: 7px 0 0; font-size: 13px; line-height: 1.55; color: var(--mid); }
+.feature-meta { margin-top: 8px; font-size: 12px; color: var(--dim); }
+
+/* Market snapshot on the Pulse page — the board's columns without the
+   expandable detail, which belongs on the board itself. */
+.snap-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px 84px 80px 74px;
+  gap: 14px; align-items: baseline;
+  padding: 7px 0; border-bottom: 1px solid var(--line-soft);
+}
+.snap-row:last-of-type { border-bottom: 0; }
+.snap-row:hover { background: var(--raise); }
+.snap-row:hover .snap-name { color: var(--accent); }
+.snap-name { font-size: 13px; color: var(--ink); }
+.snap-val { font-size: 13px; }
+.snap-row.is-out .snap-name, .snap-row.is-out .snap-val { color: var(--dim); }
+
 /* the daily verse — quiet, set in the reading face, no container */
 .scripture { margin: 16px 0 0; max-width: 62ch; }
 .scripture blockquote {
@@ -343,14 +383,18 @@ a { color: inherit; text-decoration: none; }
 /* ---- info tips --------------------------------------------------------- */
 
 .tip { position: relative; display: inline-flex; align-items: center; }
+/* Sized and weighted to be findable. It was 15px of --dim on --line, which
+   read as a smudge next to a section label rather than a control. */
 .tip-btn {
-  width: 15px; height: 15px; padding: 0;
+  width: 18px; height: 18px; padding: 0;
   display: inline-flex; align-items: center; justify-content: center;
-  font-family: var(--serif); font-size: 11px; font-style: italic; line-height: 1;
-  color: var(--dim); background: none;
-  border: 1px solid var(--line); border-radius: 50%; cursor: pointer;
+  font-family: var(--serif); font-size: 12.5px; font-style: italic; line-height: 1;
+  color: var(--mid); background: var(--raise);
+  border: 1px solid var(--dim); border-radius: 50%; cursor: pointer;
 }
-.tip-btn:hover, .tip.is-open .tip-btn { color: var(--ink); border-color: var(--dim); }
+.tip-btn:hover, .tip.is-open .tip-btn {
+  color: var(--bg); background: var(--ink); border-color: var(--ink);
+}
 
 .tip-pop {
   display: none;
@@ -443,11 +487,12 @@ a { color: inherit; text-decoration: none; }
 .icon-btn {
   margin-left: auto;
   display: inline-flex; align-items: center; gap: 7px;
-  padding: 3px 9px;
-  font: inherit; font-size: 11.5px; color: var(--mid);
-  background: none; border: 1px solid var(--line); border-radius: 4px; cursor: pointer;
+  padding: 5px 11px;
+  font: inherit; font-size: 12.5px; font-weight: 500; color: var(--ink);
+  background: var(--raise); border: 1px solid var(--dim); border-radius: 4px; cursor: pointer;
 }
-.icon-btn:hover { color: var(--ink); border-color: var(--border-strong, var(--dim)); background: var(--raise); }
+.icon-btn:hover { color: var(--bg); background: var(--ink); border-color: var(--ink); }
+.icon-btn:hover svg { color: var(--bg); }
 .icon-btn svg { width: 14px; height: 14px; }
 
 /* debt and defence sit side by side: two views of the same federal money */
@@ -601,7 +646,10 @@ a { color: inherit; text-decoration: none; }
 
 @media (max-width: 900px) {
   :root { --pad: 20px; }
-  .quad, .triad, .two-col { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .quad, .triad, .two-col, .pulse-top { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .feature { padding-top: 22px; }
+  .snap-row { grid-template-columns: minmax(0, 1fr) 88px 76px; }
+  .snap-row .spark-cell, .snap-row .regime { display: none; }
   .row-attention { grid-template-columns: minmax(0, 1fr) 70px 16px; }
   .row-attention .level, .row-attention .detail { display: none; }
   .matrix-head, .matrix-row { grid-template-columns: minmax(0, 1fr) 84px 18px 60px; }
