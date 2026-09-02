@@ -1629,29 +1629,28 @@ function renderImmigration(host) {
     return;
   }
 
-  // The plain statement first: how many people are here, how many were born
-  // abroad, what share that is. The three grouped measures below answer
-  // different questions and were doing a poor job of answering this one.
+  // Three figures, stated. Total population, how many of those were born
+  // abroad, and the share. All 2024: total population is published a year
+  // ahead of the migrant-stock estimate, and mixing them would not reconcile.
   const h = mig.headline;
-  const headline = h ? el('div', { className: 'mig-headline' }, [
-    el('span', { className: 'mig-big' }, bigPeople(h.foreignBorn)),
-    el('span', { className: 'mig-said' }, 'people living in the United States were born abroad'),
-    el('span', { className: 'mig-of' }, [
-      h.share != null ? el('b', {}, `${h.share.toFixed(1)}%`) : null,
-      h.share != null ? ' of a population of ' : 'Of a population of ',
-      el('b', {}, bigPeople(h.population)),
-      ` · ${h.year}, ${h.period_type}`,
-      infoTip(
-        el('b', {}, 'Foreign-born '), 'means born outside the United States, whatever a person’s '
-        + 'citizenship now is. Many are naturalised US citizens. It is a resident population at a '
-        + 'point in time, not a count of arrivals. ',
-        el('b', {}, 'The share is the publisher’s own figure, '),
-        'not these two numbers divided: dividing them gives about 15.4%, because the World Bank '
-        + 'computes the share against a mid-year denominator that differs slightly from the total '
-        + 'population series. The published figure is used rather than one derived here. ',
-        el('b', {}, 'Source. '), ext(h.source.url, h.source.name), ` · ${h.source.type} · ${h.source.cadence}.`,
-      ),
-    ]),
+  const figure = (k, v, tip) => el('div', {}, [
+    el('span', { className: 'horizon-k' }, [k, tip ?? null]),
+    el('span', { className: 'horizon-v mig-fig' }, v),
+  ]);
+  const headline = h ? el('div', { className: 'horizons mig-figs' }, [
+    figure('US POPULATION', bigPeople(h.population)),
+    figure('BORN ABROAD', bigPeople(h.foreignBorn), infoTip(
+      el('b', {}, 'Foreign-born '), 'means born outside the United States, whatever a person’s '
+      + 'citizenship is now — many are naturalised US citizens. A resident population at a point in '
+      + 'time, not a count of arrivals. ',
+      el('b', {}, 'Source. '), ext(h.source.url, h.source.name),
+      ` · ${h.source.type} · ${h.year}.`,
+    )),
+    h.share != null ? figure('SHARE', `${h.share.toFixed(1)}%`, infoTip(
+      'The publisher’s own figure, not the two above divided — dividing them gives about 15.4%, '
+      + 'because the published share uses a mid-year denominator that differs slightly from the '
+      + 'total population series.',
+    )) : null,
   ]) : null;
 
   const usSection = el('section', { className: 'section' }, [
