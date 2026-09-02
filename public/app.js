@@ -441,6 +441,48 @@ function elsewhereStories(limit = 8) {
   return (state.wire ?? []).filter((w) => !claimed(w.title)).slice(0, limit);
 }
 
+// The greeting. "Hello" is dead space at the top of a board whose whole job is
+// to say what is happening, so it says something — but only measured things:
+// levels come from scored subjects, the market note from an instrument's
+// z-score against its own 90-day range, the same number the board labels.
+function timeOfDay(d = new Date()) {
+  const h = d.getHours();
+  if (h < 5) return 'Late night';
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  if (h < 22) return 'Good evening';
+  return 'Late evening';
+}
+
+function greetingNote() {
+  const parts = [];
+
+  const high = allSubjects().filter((s) => s.activity?.level === 'high');
+  if (high.length) {
+    const rising = high.filter((s) => s.activity?.trend === 'up').length;
+    const noun = high.length === 1 ? 'front' : 'fronts';
+    const trend = rising === 0 ? ''
+      : rising < high.length ? `, ${rising} rising`
+        : high.length === 1 ? ', rising'
+          : high.length === 2 ? ', both rising'
+            : ', all rising';
+    parts.push(`${high.length} ${noun} at high activity${trend}`);
+  }
+
+  // The single most unusual instrument, by how far today's move sits from its
+  // own distribution — not by the size of the move.
+  const odd = (state.markets ?? [])
+    .filter((m) => m.regime && m.regime.label !== 'normal' && m.changePct != null && m.regime.z != null)
+    .sort((a, b) => Math.abs(b.regime.z) - Math.abs(a.regime.z))[0];
+  if (odd) parts.push(`${odd.name.toLowerCase()} ${odd.regime.label} at ${pct(odd.changePct)}`);
+
+  const down = (state.status ?? []).filter((s) => !s.ok).length;
+  if (down) parts.push(`${down} source${down === 1 ? '' : 's'} not reporting`);
+
+  // Say so plainly rather than inventing something to report.
+  return parts.length ? `${parts.join(' · ')}.` : 'Nothing unusual on the board.';
+}
+
 function renderPulse(host) {
   const domains = state.domains ?? [];
   const markets = state.markets ?? [];
@@ -452,7 +494,8 @@ function renderPulse(host) {
 
   const verse = state.scripture;
   const greeting = el('div', { className: 'greeting' }, [
-    el('h1', {}, 'Hello, Degen'),
+    el('h1', {}, timeOfDay()),
+    el('p', {}, greetingNote()),
     verse?.text ? el('figure', { className: 'scripture' }, [
       el('blockquote', {}, verse.text),
       el('figcaption', {}, [
