@@ -70,9 +70,19 @@ a { color: inherit; text-decoration: none; }
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
 }
-.topbar-inner { display: flex; align-items: center; gap: 28px; height: 52px; }
+.topbar-inner { display: flex; align-items: baseline; gap: 30px; height: 62px; }
 
-.nav { display: flex; gap: 22px; }
+/* The wordmark, set in the reading face — it is the masthead now, so the page
+   below opens straight into the verse rather than repeating a title. */
+.brand {
+  font-family: var(--serif); font-size: 25px; font-weight: 400;
+  letter-spacing: -0.02em; line-height: 1; color: var(--ink);
+  align-self: center; padding-bottom: 2px;
+}
+.brand:hover { color: var(--accent); }
+.brand.is-active { color: var(--ink); }
+
+.nav { display: flex; gap: 22px; align-self: center; }
 .nav a {
   font-size: 13.5px;
   color: var(--mid);
@@ -84,7 +94,7 @@ a { color: inherit; text-decoration: none; }
 .nav a.is-active { color: var(--ink); font-weight: 500; border-bottom-color: var(--ink); }
 
 .topbar-meta {
-  margin-left: auto;
+  margin-left: auto; align-self: center;
   display: flex; align-items: center; gap: 9px;
   font-size: 12.5px; color: var(--dim);
   font-variant-numeric: tabular-nums;
@@ -399,18 +409,8 @@ a { color: inherit; text-decoration: none; }
 /* bs- classes are used only by the Pulse view. The domain pages keep the
    single-column section rhythm they already have. */
 
-.bs-mast {
-  display: flex; align-items: flex-end; justify-content: space-between; gap: 20px;
-  padding: 34px 0 10px; border-bottom: 2px solid var(--ink);
-}
-.bs-mark { font-family: var(--serif); font-size: 30px; font-weight: 400; letter-spacing: -0.02em; line-height: 1; }
-.bs-meta {
-  font-size: 11.5px; letter-spacing: 0.04em; color: var(--dim);
-  font-variant-numeric: tabular-nums; text-transform: uppercase; text-align: right;
-}
-
 /* The verse: a standing band between the masthead and the news. */
-.bs-epigraph { display: flex; gap: 26px; align-items: baseline; padding: 15px 0 2px; }
+.bs-epigraph { display: flex; gap: 26px; align-items: baseline; padding: 34px 0 2px; }
 .bs-epigraph p {
   margin: 0; max-width: 82ch;
   font-family: var(--serif); font-size: 15px; font-style: italic; font-weight: 400;
@@ -823,8 +823,10 @@ a.bs-kv:hover span { color: var(--accent); }
   .bs-lead h1 { font-size: 27px; }
   .bs-fl { grid-template-columns: minmax(0, 1fr) 60px 54px; }
   .bs-fl .trend { display: none; }
-  .bs-mast { flex-wrap: wrap; gap: 8px; }
-  .bs-meta { text-align: left; }
+  .topbar-inner { height: auto; flex-wrap: wrap; gap: 10px 20px; padding: 12px 0; }
+  .brand { font-size: 22px; }
+  .nav { order: 3; flex-basis: 100%; gap: 18px; }
+  .bs-epigraph { padding-top: 24px; }
 
   .row-attention { grid-template-columns: minmax(0, 1fr) 70px 16px; }
   .row-attention .level, .row-attention .detail { display: none; }

@@ -43,7 +43,6 @@ const fmtDate = (iso, opts = { month: 'short', day: 'numeric', year: 'numeric' }
   asDate(iso).toLocaleDateString('en-US', { ...opts, timeZone: 'UTC' });
 const clockFmt = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' });
 const dayFmt = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-const mastFmt = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
 function ago(ms) {
   if (!ms) return '';
@@ -436,16 +435,6 @@ function attentionRows() {
 
 // Stories the tracked and watched subjects do not account for — the rest of the
 
-// The greeting is a plain salutation; the board below it does the reporting.
-function timeOfDay(d = new Date()) {
-  const h = d.getHours();
-  if (h < 5) return 'Late night';
-  if (h < 12) return 'Good morning';
-  if (h < 17) return 'Good afternoon';
-  if (h < 22) return 'Good evening';
-  return 'Late evening';
-}
-
 // A chart you steer, rather than the whole board repeated. Group first, then
 // instrument within it — 22 instruments is too many to lay out flat, and the
 // groups are the axis people actually think in ("how's oil", "how's gold").
@@ -630,13 +619,6 @@ function renderPulse(host) {
   const [lead, ...rest] = subjects;
 
   const verse = state.scripture;
-  const live = (state.status ?? []).filter((s) => s.ok).length;
-
-  const masthead = el('div', { className: 'bs-mast' }, [
-    el('span', { className: 'bs-mark' }, timeOfDay()),
-    el('span', { className: 'bs-meta' },
-      `${mastFmt.format(new Date(state.generatedAt))} · ${live}/${(state.status ?? []).length} SOURCES REPORTING`),
-  ]);
 
   const epigraph = verse?.text ? el('div', { className: 'bs-epigraph' }, [
     el('p', {}, verse.text),
@@ -729,7 +711,7 @@ function renderPulse(host) {
     ]) : null,
   ].filter(Boolean));
 
-  host.replaceChildren(...[masthead, epigraph, deck, band, band2].filter(Boolean));
+  host.replaceChildren(...[epigraph, deck, band, band2].filter(Boolean));
 }
 
 // ---- level 2: domains -----------------------------------------------------
@@ -1795,7 +1777,6 @@ function renderImmigration(host) {
 }
 
 const NAV = [
-  { hash: '#/', label: 'Pulse' },
   { hash: '#/world', label: 'World' },
   { hash: '#/markets', label: 'Markets' },
   { hash: '#/government', label: 'Government' },
@@ -1806,6 +1787,9 @@ const NAV = [
 
 function renderNav() {
   const h = location.hash || '#/';
+  // The wordmark is the home link, so it carries the active state the Pulse
+  // nav item used to.
+  $('brand').classList.toggle('is-active', h === '#/' || h === '');
   const active = NAV.reduce((best, n) => (h === n.hash || (n.hash !== '#/' && h.startsWith(n.hash)) ? n.hash : best), '#/');
   const deep = h.startsWith('#/situation/') || h.startsWith('#/world/') ? '#/world' : null;
   $('nav').replaceChildren(...NAV.map((n) => el('a', {
