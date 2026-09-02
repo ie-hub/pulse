@@ -69,7 +69,7 @@ async function loadSituations() {
   }
 }
 
-export // Re-read per request like situations.json, so editing the pin and reloading
+// Re-read per request like situations.json, so editing the pin and reloading
 // is enough. A missing or malformed file is not an error worth failing on —
 // it just means nothing is pinned and the automatic pick takes over.
 async function loadPinnedFeature() {
@@ -80,7 +80,7 @@ async function loadPinnedFeature() {
   }
 }
 
-async function buildState() {
+export async function buildState() {
   const [feedEntries, marketsEntry, situations, scripture, debtEntry, aidEntry, defenseEntry] = await Promise.all([
     Promise.all(SOURCES.map(async (s) => [s, await cached(s.id, TTL.feed, () => loadSource(s))])),
     cached('markets', TTL.market, loadMarkets),
