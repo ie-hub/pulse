@@ -1463,6 +1463,11 @@ function route() {
   const situation = hash.match(/^#\/situation\/(.+)$/);
   const watched = hash.match(/^#\/world\/(.+)$/);
 
+  // Names the view on the host, so a style can be scoped to one page without
+  // touching the shared component it is built from.
+  host.dataset.view = situation || watched ? 'entity'
+    : (hash.replace(/^#\/?/, '') || 'pulse');
+
   if (situation) renderSituation(host, situation[1]);
   else if (watched) renderWatched(host, watched[1]);
   else (ROUTES[hash] ?? renderPulse)(host);

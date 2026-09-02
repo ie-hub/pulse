@@ -13,6 +13,7 @@
 
   --accent:    #1f4e79;   /* the one accent: links, active state, price line */
   --high:      #b42318;   /* semantic only */
+  --heading:   #b1483a;   /* section names — not a reading, just a heading */
   --medium:    #b54708;
   --low:       #737373;
   --up:        #067647;
@@ -36,6 +37,7 @@
 
   --accent:    #7ea8cc;
   --high:      #e5675c;
+  --heading:   #d1786a;
   --medium:    #d68b3f;
   --low:       #8f8e8a;
   --up:        #4fa87a;
@@ -185,6 +187,15 @@ a { color: inherit; text-decoration: none; }
 }
 .section-label .note { font-size: 12px; color: var(--dim); }
 .section-label .right { margin-left: auto; font-size: 12px; color: var(--dim); }
+
+/* Pulse only, via the host's data-view. .section and .section-label are shared
+   by every view, so this is a modifier rather than a change to them: more air
+   between sections, and the name set heavier and in the heading red so the
+   break registers before the rule does. */
+[data-view="pulse"] .section + .section { padding-top: 64px; }
+[data-view="pulse"] .section-label h2 {
+  font-size: 12.5px; font-weight: 700; color: var(--heading);
+}
 
 /* a lighter rule for subordinate groups */
 .sub-label {
