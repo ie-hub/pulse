@@ -925,6 +925,16 @@ function renderMarkets(host) {
     ]));
   }
 
+  // The steerable chart belongs with the board it explores, not on a front page
+  // meant to be scanned. Group, then instrument, then range.
+  const explorer = marketExplorer(markets);
+  if (explorer) {
+    sections.push(el('section', { className: 'section' }, [
+      sectionLabel('Chart', 'group, instrument and range'),
+      explorer,
+    ]));
+  }
+
   const boardLabel = sectionLabel('The board',
     `${markets.filter((m) => m.value != null).length} of ${markets.length} instruments reporting`,
     'Click any row for horizons, chart and provenance');
@@ -974,6 +984,8 @@ function renderMarkets(host) {
   sections.push(board);
 
   host.replaceChildren(...sections);
+  // drawChart measures its container, so it can only paint once mounted.
+  explorer?.paintChart?.();
   redraw = null;
 }
 

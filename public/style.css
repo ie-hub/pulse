@@ -825,9 +825,14 @@ a.bs-kv:hover span { color: var(--accent); }
   .bs-lead h1 { font-size: 27px; }
   .bs-fl { grid-template-columns: minmax(0, 1fr) 60px 54px; }
   .bs-fl .trend { display: none; }
-  .topbar-inner { height: auto; flex-wrap: wrap; gap: 10px 20px; padding: 12px 0; }
+  /* Keep the wrap's own horizontal padding — setting `padding: 12px 0` here
+     zeroed it and pushed the bar flush to the screen edge. */
+  .topbar-inner { height: auto; flex-wrap: wrap; gap: 10px 20px; padding: 12px var(--pad); }
   .brand { font-size: 22px; }
-  .nav { order: 3; flex-basis: 100%; gap: 18px; }
+  /* Six items are wider than a phone. Wrap them onto a second line rather than
+     letting flex shrink each one until the last word is cut in half. */
+  .nav { order: 3; flex-basis: 100%; flex-wrap: wrap; gap: 8px 18px; }
+  .nav a { flex: none; }
   .bs-epigraph { padding: 24px 0; }
 
   .row-attention { grid-template-columns: minmax(0, 1fr) 70px 16px; }
