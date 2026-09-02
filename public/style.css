@@ -128,9 +128,6 @@ a { color: inherit; text-decoration: none; }
   display: flex; align-items: baseline; gap: 10px;
   font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim);
 }
-/* How it was chosen, said plainly rather than implied. */
-.feature-basis { color: var(--mid); }
-.feature-basis::before { content: '· '; color: var(--line); }
 .feature-title {
   margin: 8px 0 0;
   font-size: 16px; font-weight: 500; line-height: 1.35; color: var(--ink);

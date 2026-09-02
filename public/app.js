@@ -532,7 +532,6 @@ function featureCard() {
   }, [
     el('div', { className: 'feature-label' }, [
       el('span', {}, 'Article of the day'),
-      el('span', { className: 'feature-basis' }, f.basis === 'pinned' ? 'picked by hand' : 'most carried'),
     ]),
     el('h2', { className: 'feature-title' }, f.title),
     f.summary ? el('p', { className: 'feature-sum' }, f.summary) : null,
@@ -547,7 +546,6 @@ function featureCard() {
 }
 
 function renderPulse(host) {
-  const domains = state.domains ?? [];
   const markets = state.markets ?? [];
   const quakes = (state.hazard ?? []).filter((h) => h.outlet === 'USGS');
   const alerts = (state.hazard ?? []).filter((h) => h.outlet === 'NWS');
@@ -568,8 +566,7 @@ function renderPulse(host) {
   const top = el('div', { className: 'pulse-top' }, [greeting, featureCard()]);
 
   const attention = el('section', { className: 'section' }, [
-    sectionLabel('Front lines', 'ranked by activity — recency, significance and change',
-      domains.every((d) => d.trend === 'unknown') ? 'trend baselines still building' : null),
+    sectionLabel('Front lines', 'ranked by activity — recency, significance and change'),
     ...attentionRows(),
   ]);
 
@@ -598,7 +595,7 @@ function renderPulse(host) {
     ...notes.map((n) => el('p', { className: 'matters' }, [
       n.text, el('span', { className: 'matters-src' }, n.evidence),
     ])),
-    signals.length ? subLabel('Signals', 'derived here — not published indices') : null,
+    signals.length ? subLabel('Signals') : null,
     signals.length ? el('div', { className: 'signals' }, signals.map((sig) => el('div', {
       className: 'signal', title: sig.basis,
     }, [
@@ -1513,10 +1510,7 @@ async function refresh() {
   lastGood = state.generatedAt;
   const live = state.status.filter((s) => s.ok).length;
   $('clock').textContent = `${dayFmt.format(new Date(state.generatedAt))} · ${clockFmt.format(new Date(state.generatedAt))}`;
-  // A snapshot must not read as a live source count. Say what it is and how old.
-  $('health').textContent = state.snapshot
-    ? `${live}/${state.status.length} sources · snapshot, built ${ago(state.generatedAt)}`
-    : `${live}/${state.status.length} sources`;
+  $('health').textContent = `${live}/${state.status.length} sources`;
 
   // A rendering fault is this app's bug, not the sources'. Reporting it as
   // "stale" sent me hunting a data problem that did not exist.
