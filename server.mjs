@@ -148,9 +148,10 @@ export async function buildState() {
     const mine = (lane) => lane.filter((i) => ids.has(i.sourceId));
     places[place] = {
       wire: clusterStories(mine(lanes.wire)).slice(0, 60),
-      // Generous per-outlet cap: this view exists to hold the whole local
-      // run, not a sample of it. The global rail above is still capped at 6.
-      official: roundRobin(mine(lanes.official), 60).slice(0, 200),
+      // No practical per-outlet cap: this view exists to hold the whole local
+      // run, and search reads from it. Capping at 60 while fetching 120 would
+      // throw away half of what was just fetched. The global rail is still 6.
+      official: roundRobin(mine(lanes.official), 200).slice(0, 400),
     };
   }
   const hazard = lanes.hazard.sort(byTime).slice(0, 20);
