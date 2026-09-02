@@ -115,7 +115,15 @@ a { color: inherit; text-decoration: none; }
 }
 .pulse-top .greeting { padding-bottom: 0; }
 
-.feature { display: block; padding: 40px 0 4px; }
+/* Outlined so it reads as a separate object. It sat in the same serif at a
+   similar size as the greeting and verse beside it, so the eye ran the three
+   together as one block of prose. The rule, the ground and a sans-serif
+   headline give it its own texture — no shadow, no fill beyond the raise. */
+.feature {
+  display: block; margin-top: 40px; padding: 16px 18px 15px;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--raise);
+}
+.feature:hover { border-color: var(--dim); }
 .feature-label {
   display: flex; align-items: baseline; gap: 10px;
   font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim);
@@ -124,28 +132,27 @@ a { color: inherit; text-decoration: none; }
 .feature-basis { color: var(--mid); }
 .feature-basis::before { content: '· '; color: var(--line); }
 .feature-title {
-  margin: 9px 0 0;
-  font-family: var(--serif); font-size: 20px; font-weight: 400;
-  line-height: 1.28; letter-spacing: -0.005em; color: var(--ink);
+  margin: 8px 0 0;
+  font-size: 16px; font-weight: 500; line-height: 1.35; color: var(--ink);
 }
 .feature:hover .feature-title { color: var(--accent); }
 .feature-sum { margin: 7px 0 0; font-size: 13px; line-height: 1.55; color: var(--mid); }
 .feature-meta { margin-top: 8px; font-size: 12px; color: var(--dim); }
 
-/* Market snapshot on the Pulse page — the board's columns without the
-   expandable detail, which belongs on the board itself. */
-.snap-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 96px 84px 80px 74px;
-  gap: 14px; align-items: baseline;
-  padding: 7px 0; border-bottom: 1px solid var(--line-soft);
+/* Steerable chart on the Pulse page: group, then instrument, then the chart. */
+.picker { margin-top: 18px; }
+.picker-group { flex-wrap: wrap; margin-bottom: 6px; }
+.picker-group button { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
+.picker-instr { flex-wrap: wrap; margin-bottom: 10px; }
+.picker-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 4px; font-size: 11.5px;
 }
-.snap-row:last-of-type { border-bottom: 0; }
-.snap-row:hover { background: var(--raise); }
-.snap-row:hover .snap-name { color: var(--accent); }
-.snap-name { font-size: 13px; color: var(--ink); }
-.snap-val { font-size: 13px; }
-.snap-row.is-out .snap-name, .snap-row.is-out .snap-val { color: var(--dim); }
+.picker-cap {
+  display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline;
+  margin-top: 6px; font-size: 12px;
+}
+.picker-cap .regime { text-align: left; }
 
 /* the daily verse — quiet, set in the reading face, no container */
 .scripture { margin: 16px 0 0; max-width: 62ch; }
@@ -515,6 +522,9 @@ a { color: inherit; text-decoration: none; }
 .gov-split .debt-split { gap: 20px; }
 .gov-split .horizons { gap: 20px; }
 .gov-split .horizon-v { font-size: 14.5px; }
+/* On the Pulse page these sit under a section label that already provides the
+   spacing, so the per-column top padding would double it. */
+.gov-split.is-pulse > .section { padding-top: 12px; }
 @media (max-width: 1200px) { .gov-split { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 820px) { .gov-split { grid-template-columns: minmax(0, 1fr); gap: 0; } }
 
@@ -648,8 +658,7 @@ a { color: inherit; text-decoration: none; }
   :root { --pad: 20px; }
   .quad, .triad, .two-col, .pulse-top { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .feature { padding-top: 22px; }
-  .snap-row { grid-template-columns: minmax(0, 1fr) 88px 76px; }
-  .snap-row .spark-cell, .snap-row .regime { display: none; }
+
   .row-attention { grid-template-columns: minmax(0, 1fr) 70px 16px; }
   .row-attention .level, .row-attention .detail { display: none; }
   .matrix-head, .matrix-row { grid-template-columns: minmax(0, 1fr) 84px 18px 60px; }

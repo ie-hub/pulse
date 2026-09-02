@@ -443,6 +443,83 @@ function timeOfDay(d = new Date()) {
   return 'Late evening';
 }
 
+// A chart you steer, rather than the whole board repeated. Group first, then
+// instrument within it — 22 instruments is too many to lay out flat, and the
+// groups are the axis people actually think in ("how's oil", "how's gold").
+// Reuses drawChart, so this is the same rendering the board's own detail uses.
+function marketExplorer(markets) {
+  const groups = MKT_GROUPS.filter((g) => markets.some((m) => m.group === g && m.series?.length));
+  if (!groups.length) return null;
+
+  let group = groups[0];
+  let pick = null;
+  // A year by default, like the board's own detail. Full history put four
+  // years on a page about today, at a scale where the day's move vanished.
+  let days = 366;
+
+  const instrRow = el('div', { className: 'ranges picker-instr' });
+  const chartWrap = el('div', { className: 'mkt-chart' });
+  const caption = el('div', { className: 'picker-cap muted' });
+
+  const paint = () => {
+    const from = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+    drawChart(chartWrap, pick, [], from, 200);
+    caption.replaceChildren(
+      `${pick.name} · ${fmtValue(pick)} · ${fmtChange(pick, 'd1')} today`,
+      el('span', { className: `regime regime-${pick.regime?.label ?? 'unknown'}` },
+        pick.regime?.label ?? ''),
+      el('span', {}, freshnessLabel(pick)),
+    );
+  };
+
+  const showGroup = (g) => {
+    group = g;
+    const rows = markets.filter((m) => m.group === group && m.series?.length);
+    pick = rows[0];
+    instrRow.replaceChildren(...rows.map((m) => {
+      const b = el('button', { type: 'button', className: m === pick ? 'is-on' : '' }, m.name);
+      b.addEventListener('click', () => {
+        pick = m;
+        instrRow.querySelectorAll('button').forEach((x) => x.classList.remove('is-on'));
+        b.classList.add('is-on');
+        paint();
+      });
+      return b;
+    }));
+    paint();
+  };
+
+  const groupRow = el('div', { className: 'ranges picker-group' }, groups.map((g) => {
+    const b = el('button', { type: 'button', className: g === group ? 'is-on' : '' }, g);
+    b.addEventListener('click', () => {
+      groupRow.querySelectorAll('button').forEach((x) => x.classList.remove('is-on'));
+      b.classList.add('is-on');
+      showGroup(g);
+    });
+    return b;
+  }));
+
+  const rangeRow = el('div', { className: 'ranges picker-range' }, RANGES.map(([label, d]) => {
+    const b = el('button', { type: 'button', className: d === days ? 'is-on' : '' }, label);
+    b.addEventListener('click', () => {
+      days = d;
+      rangeRow.querySelectorAll('button').forEach((x) => x.classList.remove('is-on'));
+      b.classList.add('is-on');
+      paint();
+    });
+    return b;
+  }));
+
+  const wrap = el('div', { className: 'picker' }, [
+    groupRow, instrRow,
+    el('div', { className: 'picker-head' }, [el('span', { className: 'muted' }, 'Daily closes'), rangeRow]),
+    chartWrap, caption,
+  ]);
+  // drawChart measures its container, so it can only run once this is in the DOM.
+  wrap.paintChart = () => showGroup(group);
+  return wrap;
+}
+
 // The article of the day, beside the greeting. It states how it was chosen —
 // a hand-picked article and a widely-carried one are different claims, and the
 // reader should not have to guess which this is.
@@ -472,7 +549,6 @@ function featureCard() {
 function renderPulse(host) {
   const domains = state.domains ?? [];
   const markets = state.markets ?? [];
-  const bodies = [...new Set((state.official ?? []).map((o) => o.outlet))];
   const quakes = (state.hazard ?? []).filter((h) => h.outlet === 'USGS');
   const alerts = (state.hazard ?? []).filter((h) => h.outlet === 'NWS');
 
@@ -497,14 +573,16 @@ function renderPulse(host) {
     ...attentionRows(),
   ]);
 
-  // Markets, grouped as the board groups them, in the slot the wire used to
-  // hold. One row per instrument: value, change, and how the move sits against
-  // that instrument's own 90-day range — the same regime label the full board
-  // uses, so the front page and the domain view cannot disagree.
-  const reporting = markets.filter((m) => m.value != null);
-  const boardSnap = el('section', { className: 'section' }, [
+  // Markets on the front page: the reading, the derived signals, and one chart
+  // you steer. The full instrument list lives on #/markets — repeating it here
+  // said the same thing twice and buried the interpretation underneath it.
+  const notes = state.whatMatters ?? [];
+  const signals = state.signals ?? [];
+  const explorer = marketExplorer(markets);
+
+  const marketsSection = el('section', { className: 'section' }, [
     (() => {
-      const l = sectionLabel('Markets', `${reporting.length} of ${markets.length} instruments reporting`,
+      const l = sectionLabel('Markets', 'read from today’s data — interpretation, not advice',
         el('a', { href: '#/markets' }, 'Full board →'));
       l.insertBefore(infoTip(
         el('b', {}, 'Sources by instrument. '),
@@ -517,38 +595,37 @@ function renderPulse(host) {
       ), l.querySelector('.right'));
       return l;
     })(),
-    ...MKT_GROUPS.flatMap((group) => {
-      const rows = markets.filter((m) => m.group === group);
-      if (!rows.length) return [];
-      return [groupLabel(group), ...rows.map((m) => el('a', {
-        className: `snap-row${m.value == null ? ' is-out' : ''}`, href: '#/markets',
-      }, [
-        el('span', { className: 'snap-name' }, m.name),
-        el('span', { className: 'n snap-val' }, fmtValue(m)),
-        el('span', { className: `n ${changeClass(m, 'd1')}` }, fmtChange(m, 'd1')),
-        el('span', { className: 'spark-cell' }, m.series?.length ? sparkline(m, 72, 16) : ''),
-        el('span', { className: `regime regime-${m.regime?.label ?? 'unknown'}` },
-          m.value == null ? 'unavailable' : m.regime?.label ?? ''),
-      ]))];
-    }),
+    ...notes.map((n) => el('p', { className: 'matters' }, [
+      n.text, el('span', { className: 'matters-src' }, n.evidence),
+    ])),
+    signals.length ? subLabel('Signals', 'derived here — not published indices') : null,
+    signals.length ? el('div', { className: 'signals' }, signals.map((sig) => el('div', {
+      className: 'signal', title: sig.basis,
+    }, [
+      el('span', { className: 'signal-k' }, sig.label),
+      el('span', { className: 'signal-v' }, [
+        el('span', { className: `trend trend-${sig.trend}` }, TREND_GLYPH[sig.trend] ?? '·'),
+        el('span', { className: 'signal-n' }, sig.value),
+      ]),
+      el('span', { className: 'signal-basis' }, sig.basis),
+    ]))) : null,
+    explorer,
   ]);
 
-  const overview = el('section', { className: 'section' }, [
-    sectionLabel('The board'),
+  // The same three columns the Government view opens with. A count of postings
+  // per body said nothing about the money, which is what that page is for.
+  const debt = debtSection();
+  const defense = defenseSection();
+  const govSection = el('section', { className: 'section' }, [
+    sectionLabel('Government', 'debt, defence and aid', el('a', { href: '#/government' }, 'Postings →')),
+    el('div', { className: 'gov-split is-pulse' }, [debt, defense, aidSection()]),
+  ]);
+
+  const climate = el('section', { className: 'section' }, [
+    sectionLabel('Climate & hazard', 'near-term only — alerts and seismic',
+      el('a', { href: '#/climate' }, 'All →')),
     el('div', { className: 'two-col' }, [
       el('div', {}, [
-        subLabel('Government', el('a', { href: '#/government' }, 'All →')),
-        ...bodies.slice(0, 6).map((b) => {
-          const items = (state.official ?? []).filter((o) => o.outlet === b);
-          return el('a', { className: 'mini', href: '#/government' }, [
-            el('span', { className: 'mini-name' }, b),
-            el('span', { className: 'muted', style: 'font-size:12px' }, ago(items[0]?.time)),
-            el('span', { className: 'mini-val' }, String(items.length)),
-          ]);
-        }),
-      ]),
-      el('div', {}, [
-        subLabel('Climate & hazard', el('a', { href: '#/climate' }, 'All →')),
         el('a', { className: 'mini', href: '#/climate' }, [
           el('span', { className: 'mini-name' }, 'Extreme weather alerts'),
           el('span', {}), el('span', { className: 'mini-val' }, String(alerts.length)),
@@ -557,16 +634,26 @@ function renderPulse(host) {
           el('span', { className: 'mini-name' }, 'Earthquakes M4.5+ (24h)'),
           el('span', {}), el('span', { className: 'mini-val' }, String(quakes.length)),
         ]),
+      ]),
+      el('div', {}, [
         el('a', { className: 'mini', href: '#/climate' }, [
           el('span', { className: 'mini-name' }, 'Largest magnitude'),
           el('span', {}),
           el('span', { className: 'mini-val' }, quakes.length ? `M ${Math.max(...quakes.map((q) => q.magnitude ?? 0)).toFixed(1)}` : '—'),
         ]),
+        el('a', { className: 'mini', href: '#/government' }, [
+          el('span', { className: 'mini-name' }, 'Official postings today'),
+          el('span', {}), el('span', { className: 'mini-val' }, String((state.official ?? []).length)),
+        ]),
       ]),
     ]),
   ]);
 
-  host.replaceChildren(top, attention, boardSnap, overview);
+  host.replaceChildren(top, attention, marketsSection, govSection, climate);
+  // These measure their containers, so they paint only once they are in the DOM.
+  explorer?.paintChart?.();
+  debt.paintChart?.();
+  defense.paintChart?.();
 }
 
 // ---- level 2: domains -----------------------------------------------------
