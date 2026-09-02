@@ -1302,12 +1302,28 @@ function initChrome() {
   });
 }
 
-async function refresh() {
-  let next;
+// Two ways to get state, tried in this order. The local server builds it on
+// demand at /api/state. GitHub Pages cannot run Node, so there it is a file the
+// build workflow wrote — older, and labelled as such rather than passed off as
+// the same thing.
+async function loadState() {
   try {
     const res = await fetch('/api/state', { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    next = await res.json();
+    return await res.json();
+  } catch (err) {
+    const res = await fetch('./state.json', { cache: 'no-store' });
+    // Report the server's failure, not the fallback's: on a machine running the
+    // server, /api/state failing is the real problem worth surfacing.
+    if (!res.ok) throw err;
+    return await res.json();
+  }
+}
+
+async function refresh() {
+  let next;
+  try {
+    next = await loadState();
   } catch (err) {
     // A fetch problem is a data problem; say so and keep the last good view.
     $('health').textContent = lastGood ? 'stale' : `unreachable (${err.message})`;
@@ -1318,7 +1334,10 @@ async function refresh() {
   lastGood = state.generatedAt;
   const live = state.status.filter((s) => s.ok).length;
   $('clock').textContent = `${dayFmt.format(new Date(state.generatedAt))} · ${clockFmt.format(new Date(state.generatedAt))}`;
-  $('health').textContent = `${live}/${state.status.length} sources`;
+  // A snapshot must not read as a live source count. Say what it is and how old.
+  $('health').textContent = state.snapshot
+    ? `${live}/${state.status.length} sources · snapshot, built ${ago(state.generatedAt)}`
+    : `${live}/${state.status.length} sources`;
 
   // A rendering fault is this app's bug, not the sources'. Reporting it as
   // "stale" sent me hunting a data problem that did not exist.

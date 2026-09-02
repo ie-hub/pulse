@@ -1,7 +1,7 @@
 import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { SOURCES, TTL } from './lib/sources.mjs';
 import { loadSource } from './lib/feeds.mjs';
@@ -67,7 +67,7 @@ async function loadSituations() {
   }
 }
 
-async function buildState() {
+export async function buildState() {
   const [feedEntries, marketsEntry, situations, scripture, debtEntry, aidEntry, defenseEntry] = await Promise.all([
     Promise.all(SOURCES.map(async (s) => [s, await cached(s.id, TTL.feed, () => loadSource(s))])),
     cached('markets', TTL.market, loadMarkets),
@@ -205,6 +205,10 @@ const server = http.createServer(async (req, res) => {
   await serveStatic(res, url.pathname);
 });
 
-server.listen(PORT, '127.0.0.1', () => {
-  console.log(`dashboard → http://localhost:${PORT}`);
-});
+// Listen only when run directly. The static Pages build imports buildState
+// from this module, and an import must not start a server.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  server.listen(PORT, '127.0.0.1', () => {
+    console.log(`dashboard → http://localhost:${PORT}`);
+  });
+}

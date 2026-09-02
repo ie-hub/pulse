@@ -4,3 +4,4 @@ node_modules/
 
 # generated at runtime — the rolling trend baseline, machine-written
 data/pulse-history.json
+dist/
