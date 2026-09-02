@@ -395,6 +395,94 @@ a { color: inherit; text-decoration: none; }
 .cmp-val { font-size: 13px; }
 .cmp-share, .cmp-year { font-size: 12px; text-align: right; }
 
+/* ---- front page, set as a broadsheet ------------------------------------ */
+/* bs- classes are used only by the Pulse view. The domain pages keep the
+   single-column section rhythm they already have. */
+
+.bs-mast {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 20px;
+  padding: 34px 0 10px; border-bottom: 2px solid var(--ink);
+}
+.bs-mark { font-family: var(--serif); font-size: 30px; font-weight: 400; letter-spacing: -0.02em; line-height: 1; }
+.bs-meta {
+  font-size: 11.5px; letter-spacing: 0.04em; color: var(--dim);
+  font-variant-numeric: tabular-nums; text-transform: uppercase; text-align: right;
+}
+
+/* The verse: a standing band between the masthead and the news. */
+.bs-epigraph { display: flex; gap: 26px; align-items: baseline; padding: 15px 0 2px; }
+.bs-epigraph p {
+  margin: 0; max-width: 82ch;
+  font-family: var(--serif); font-size: 15px; font-style: italic; font-weight: 400;
+  line-height: 1.6; color: var(--mid);
+}
+.bs-eref { font-size: 10.5px; letter-spacing: 0.08em; color: var(--dim); white-space: nowrap; }
+
+.bs-deck { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr) minmax(0, 1fr); gap: 0 26px; padding-top: 20px; }
+.bs-ruled { border-left: 1px solid var(--line); padding-left: 26px; }
+
+.bs-sub {
+  display: flex; gap: 10px; align-items: baseline;
+  padding-bottom: 7px; border-bottom: 1px solid var(--ink);
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--mid);
+}
+.bs-sub .n { font-weight: 400; font-size: 11.5px; letter-spacing: 0; text-transform: none; color: var(--dim); }
+.bs-sub .r { margin-left: auto; font-weight: 400; font-size: 11.5px; letter-spacing: 0; text-transform: none; color: var(--dim); }
+.bs-col > .bs-sub:not(:first-child) { margin-top: 22px; }
+
+.bs-kick {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: var(--heading);
+}
+.bs-lead { display: block; padding: 15px 0 4px; }
+.bs-lead h1 {
+  margin: 9px 0 0;
+  font-family: var(--serif); font-size: 33px; font-weight: 400; line-height: 1.14; letter-spacing: -0.018em;
+  color: var(--ink);
+}
+.bs-lead:hover h1 { color: var(--accent); }
+.bs-stand { margin: 11px 0 0; font-size: 13.5px; line-height: 1.6; color: var(--mid); }
+.bs-byl { display: block; margin-top: 9px; font-size: 11px; letter-spacing: 0.05em; color: var(--dim); }
+
+.bs-fl {
+  display: grid; grid-template-columns: minmax(0, 1fr) 74px 16px 54px; gap: 10px;
+  align-items: baseline; padding: 10px 0; border-bottom: 1px solid var(--line-soft);
+}
+.bs-fl:last-child { border-bottom: 0; }
+.bs-fl:hover .bs-fl-s { color: var(--accent); }
+.bs-fl-s { font-size: 13.5px; font-weight: 500; }
+.bs-fl-s i { font-style: normal; font-weight: 400; font-size: 11.5px; color: var(--dim); margin-left: 6px; }
+.bs-fl-h { grid-column: 1 / -1; margin-top: -3px; font-size: 12.5px; line-height: 1.45; color: var(--mid); }
+.bs-fl-m { color: var(--dim); }
+
+.bs-note { margin: 0; padding: 10px 0; border-bottom: 1px solid var(--line-soft); font-size: 13px; line-height: 1.55; }
+.bs-note:last-child { border-bottom: 0; }
+.bs-note em {
+  display: block; margin-top: 3px; font-style: normal;
+  font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--dim);
+}
+
+.bs-kv {
+  display: flex; justify-content: space-between; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid var(--line-soft); font-size: 12.5px;
+}
+.bs-kv b { font-weight: 500; font-variant-numeric: tabular-nums; }
+a.bs-kv:hover span { color: var(--accent); }
+
+/* The foot: government across a heavy rule, then climate and immigration. */
+.bs-band {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 26px;
+  margin-top: 30px; padding-top: 16px; border-top: 2px solid var(--ink);
+}
+.bs-band-2 { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--line); }
+.bs-band > .bs-cell + .bs-cell { border-left: 1px solid var(--line); padding-left: 26px; }
+.bs-big {
+  display: block; margin: 9px 0 5px;
+  font-size: 26px; font-weight: 600; letter-spacing: -0.028em; font-variant-numeric: tabular-nums;
+}
+.bs-split { display: flex; flex-wrap: wrap; gap: 3px 22px; font-size: 11.5px; color: var(--mid); }
+.bs-split b { color: var(--ink); font-weight: 500; font-variant-numeric: tabular-nums; }
+
 /* ---- markets ----------------------------------------------------------- */
 
 .mkt-item { border-bottom: 1px solid var(--line-soft); }
@@ -725,6 +813,18 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 900px) {
   :root { --pad: 20px; }
   .quad, .triad, .two-col { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  /* The broadsheet grid is the first thing to go: rules between columns only
+     read as columns when there are columns. */
+  .bs-deck, .bs-band { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .bs-ruled, .bs-band > .bs-cell + .bs-cell { border-left: 0; padding-left: 0; }
+  .bs-ruled, .bs-band > .bs-cell + .bs-cell { margin-top: 24px; }
+  .bs-epigraph { display: block; }
+  .bs-eref { display: block; margin-top: 8px; }
+  .bs-lead h1 { font-size: 27px; }
+  .bs-fl { grid-template-columns: minmax(0, 1fr) 60px 54px; }
+  .bs-fl .trend { display: none; }
+  .bs-mast { flex-wrap: wrap; gap: 8px; }
+  .bs-meta { text-align: left; }
 
   .row-attention { grid-template-columns: minmax(0, 1fr) 70px 16px; }
   .row-attention .level, .row-attention .detail { display: none; }

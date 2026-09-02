@@ -43,6 +43,7 @@ const fmtDate = (iso, opts = { month: 'short', day: 'numeric', year: 'numeric' }
   asDate(iso).toLocaleDateString('en-US', { ...opts, timeZone: 'UTC' });
 const clockFmt = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' });
 const dayFmt = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+const mastFmt = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
 function ago(ms) {
   if (!ms) return '';
@@ -539,110 +540,196 @@ function marketExplorer(markets) {
   return wrap;
 }
 
-function renderPulse(host) {
-  const markets = state.markets ?? [];
-  const quakes = (state.hazard ?? []).filter((h) => h.outlet === 'USGS');
-  const alerts = (state.hazard ?? []).filter((h) => h.outlet === 'NWS');
+// The front page, set as a broadsheet.
+//
+// Three ruled columns under a masthead: the most active subject promoted to a
+// lead with a headline and standfirst, the rest of the front lines beneath it,
+// the market reading in its own column, and the derived signals in a rail. The
+// government figures run as a band across the foot, climate and immigration
+// below that.
+//
+// Nothing is summarised away — the bars, trends, levels, evidence lines and
+// sub-figures are all the ones the domain pages carry. What changed is the
+// composition: a stack of five full-width sections became a page with a focal
+// point, which is what makes the density read as arranged rather than piled up.
+//
+// Scoped with bs- classes and used only here; the domain views are untouched.
 
-  const verse = state.scripture;
-  const greeting = el('div', { className: 'greeting' }, [
-    el('h1', {}, timeOfDay()),
-    verse?.text ? el('figure', { className: 'scripture' }, [
-      el('blockquote', {}, verse.text),
-      el('figcaption', {}, [
-        verse.reference,
-        verse.translation ? el('span', { className: 'scripture-tr' }, verse.translation) : null,
-        verse.note ? el('span', { className: 'scripture-tr', title: verse.note }, 'offline copy') : null,
-      ]),
+function bsHead(title, note, href, link) {
+  return el('div', { className: 'bs-sub' }, [
+    title,
+    note ? el('span', { className: 'n' }, note) : null,
+    href ? el('a', { className: 'r', href }, link) : null,
+  ]);
+}
+
+/** The most active subject, given the space of a lead story. */
+function bsLead(s) {
+  const a = s.activity;
+  const story = a.topStories?.[0];
+  const latest = s.timeline
+    ? [...s.timeline].sort((x, y) => y.date.localeCompare(x.date))[0] : null;
+  const line = story
+    ? { text: story.title, meta: `${story.outlets.join(' · ')} · ${ago(story.time)}` }
+    : latest
+      ? { text: clip(latest.action.split(/(?<=\.)\s/)[0], 150), meta: `${latest.actor} · ${fmtDate(latest.date)}` }
+      : null;
+
+  const evidence = [];
+  if (a.events7) evidence.push(`${a.events7} developments this week`);
+  if (a.mentions24) evidence.push(`${a.mentions24} on the wire today`);
+
+  return el('a', { className: 'bs-lead', href: subjectHref(s) }, [
+    el('span', { className: 'bs-kick' },
+      [s.name.replace(/\s*War$/, ''), s.region, `${a.level}${a.trend === 'up' ? ', rising' : ''}`]
+        .filter(Boolean).join(' · ')),
+    el('h1', {}, line ? line.text : s.name),
+    evidence.length ? el('p', { className: 'bs-stand' },
+      `${evidence.join(' and ')} — ranked first of ${allSubjects().length} tracked subjects.`) : null,
+    line ? el('span', { className: 'bs-byl' }, line.meta.toUpperCase()) : null,
+  ]);
+}
+
+/** The remaining front lines, keeping bar, trend, level and latest line. */
+function bsFrontRow(s, max) {
+  const a = s.activity;
+  const story = a.topStories?.[0];
+  const latest = s.timeline
+    ? [...s.timeline].sort((x, y) => y.date.localeCompare(x.date))[0] : null;
+  const line = story
+    ? { text: story.title, meta: `${story.outlets.join(' · ')} · ${ago(story.time)}` }
+    : latest
+      ? { text: clip(latest.action.split(/(?<=\.)\s/)[0], 78), meta: `${latest.actor} · ${fmtDate(latest.date)}` }
+      : null;
+
+  return el('a', { className: 'bs-fl', href: subjectHref(s) }, [
+    el('span', { className: 'bs-fl-s' }, [
+      s.name.replace(/\s*War$/, ''),
+      s.region ? el('i', {}, s.region) : null,
+    ]),
+    activityBar(a.score, a.level, max),
+    trendEl(a.trend),
+    el('span', { className: `level level-${a.level}` }, a.level),
+    line ? el('span', { className: 'bs-fl-h' }, [
+      line.text, el('span', { className: 'bs-fl-m' }, ` · ${line.meta}`),
     ]) : null,
   ]);
+}
 
-  const attention = el('section', { className: 'section' }, [
-    sectionLabel('Front lines', 'ranked by activity — recency, significance and change'),
-    ...attentionRows(),
+const bsCell = (kicker, big, splits, tip) => el('div', { className: 'bs-cell' }, [
+  el('span', { className: 'bs-kick' }, [kicker, tip ?? null]),
+  el('span', { className: 'bs-big' }, big),
+  splits?.length ? el('div', { className: 'bs-split' }, splits.filter(Boolean).map(([k, v]) =>
+    el('span', {}, [k, ' ', el('b', {}, v)]))) : null,
+]);
+
+function renderPulse(host) {
+  const subjects = allSubjects().filter((s) => s.activity.score > 0)
+    .sort((a, b) => b.activity.score - a.activity.score);
+  const max = Math.max(...subjects.map((s) => s.activity.score), 1);
+  const [lead, ...rest] = subjects;
+
+  const verse = state.scripture;
+  const live = (state.status ?? []).filter((s) => s.ok).length;
+
+  const masthead = el('div', { className: 'bs-mast' }, [
+    el('span', { className: 'bs-mark' }, timeOfDay()),
+    el('span', { className: 'bs-meta' },
+      `${mastFmt.format(new Date(state.generatedAt))} · ${live}/${(state.status ?? []).length} SOURCES REPORTING`),
   ]);
 
-  // Markets on the front page: the reading, the derived signals, and one chart
-  // you steer. The full instrument list lives on #/markets — repeating it here
-  // said the same thing twice and buried the interpretation underneath it.
-  const notes = state.whatMatters ?? [];
-  const signals = state.signals ?? [];
-  const explorer = marketExplorer(markets);
-
-  const marketsSection = el('section', { className: 'section' }, [
-    (() => {
-      const l = sectionLabel('Markets', 'read from today’s data — interpretation, not advice',
-        el('a', { href: '#/markets' }, 'Full board →'));
-      l.insertBefore(infoTip(
-        el('b', {}, 'Sources by instrument. '),
-        'U.S. Treasury (par yields, official daily) · Cboe (VIX, official close) · LBMA (gold and silver '
-        + 'benchmark) · exchange-derived quotes via Yahoo Finance for the rest, which are delayed. Nothing '
-        + 'here is real-time. ',
-        el('b', {}, 'Unusual '),
-        'compares an instrument’s move with its own 90-day range, so it means unusual for that instrument, '
-        + 'not large in the abstract.',
-      ), l.querySelector('.right'));
-      return l;
-    })(),
-    ...notes.map((n) => el('p', { className: 'matters' }, [
-      n.text, el('span', { className: 'matters-src' }, n.evidence),
-    ])),
-    signals.length ? subLabel('Signals') : null,
-    signals.length ? el('div', { className: 'signals' }, signals.map((sig) => el('div', {
-      className: 'signal', title: sig.basis,
-    }, [
-      el('span', { className: 'signal-k' }, sig.label),
-      el('span', { className: 'signal-v' }, [
-        el('span', { className: `trend trend-${sig.trend}` }, TREND_GLYPH[sig.trend] ?? '·'),
-        el('span', { className: 'signal-n' }, sig.value),
-      ]),
-      el('span', { className: 'signal-basis' }, sig.basis),
-    ]))) : null,
-    explorer,
-  ]);
-
-  // The same three columns the Government view opens with. A count of postings
-  // per body said nothing about the money, which is what that page is for.
-  const debt = debtSection();
-  const defense = defenseSection();
-  const govSection = el('section', { className: 'section' }, [
-    sectionLabel('Government', 'debt, defence and aid', el('a', { href: '#/government' }, 'Postings →')),
-    el('div', { className: 'gov-split is-pulse' }, [debt, defense, aidSection()]),
-  ]);
-
-  const climate = el('section', { className: 'section' }, [
-    sectionLabel('Climate & hazard', 'near-term only — alerts and seismic',
-      el('a', { href: '#/climate' }, 'All →')),
-    el('div', { className: 'two-col' }, [
-      el('div', {}, [
-        el('a', { className: 'mini', href: '#/climate' }, [
-          el('span', { className: 'mini-name' }, 'Extreme weather alerts'),
-          el('span', {}), el('span', { className: 'mini-val' }, String(alerts.length)),
-        ]),
-        el('a', { className: 'mini', href: '#/climate' }, [
-          el('span', { className: 'mini-name' }, 'Earthquakes M4.5+ (24h)'),
-          el('span', {}), el('span', { className: 'mini-val' }, String(quakes.length)),
-        ]),
-      ]),
-      el('div', {}, [
-        el('a', { className: 'mini', href: '#/climate' }, [
-          el('span', { className: 'mini-name' }, 'Largest magnitude'),
-          el('span', {}),
-          el('span', { className: 'mini-val' }, quakes.length ? `M ${Math.max(...quakes.map((q) => q.magnitude ?? 0)).toFixed(1)}` : '—'),
-        ]),
-        el('a', { className: 'mini', href: '#/government' }, [
-          el('span', { className: 'mini-name' }, 'Official postings today'),
-          el('span', {}), el('span', { className: 'mini-val' }, String((state.official ?? []).length)),
-        ]),
-      ]),
+  const epigraph = verse?.text ? el('div', { className: 'bs-epigraph' }, [
+    el('p', {}, verse.text),
+    el('span', { className: 'bs-eref' }, [
+      verse.reference.toUpperCase(),
+      verse.translation ? ` · ${verse.translation}` : '',
     ]),
+  ]) : null;
+
+  // --- column one: the front lines ---
+  const colOne = el('div', { className: 'bs-col' }, [
+    bsHead('Front lines', 'ranked by activity', '#/world', 'World →'),
+    lead ? bsLead(lead) : null,
+    ...rest.slice(0, 4).map((s) => bsFrontRow(s, max)),
   ]);
 
-  host.replaceChildren(greeting, attention, marketsSection, govSection, climate);
-  // These measure their containers, so they paint only once they are in the DOM.
-  explorer?.paintChart?.();
-  debt.paintChart?.();
-  defense.paintChart?.();
+  // --- column two: what the numbers say ---
+  const colTwo = el('div', { className: 'bs-col bs-ruled' }, [
+    bsHead('What matters', 'interpretation', '#/markets', 'Markets →'),
+    ...(state.whatMatters ?? []).map((n) => el('p', { className: 'bs-note' }, [
+      n.text, el('em', {}, n.evidence),
+    ])),
+  ]);
+
+  // --- column three: the signal rail ---
+  const odd = (state.markets ?? [])
+    .filter((m) => m.regime && !['normal', 'unknown'].includes(m.regime.label) && m.changePct != null)
+    .sort((a, b) => Math.abs(b.regime.z ?? 0) - Math.abs(a.regime.z ?? 0))
+    .slice(0, 5);
+  const colThree = el('div', { className: 'bs-col bs-ruled' }, [
+    bsHead('Signals', 'derived here'),
+    ...(state.signals ?? []).map((s) => el('div', { className: 'bs-kv', title: s.basis }, [
+      el('span', {}, s.label), el('b', {}, s.value),
+    ])),
+    odd.length ? bsHead('Off normal', 'vs own 90-day range') : null,
+    ...odd.map((m) => el('a', { className: 'bs-kv', href: '#/markets' }, [
+      el('span', {}, m.name),
+      el('b', { className: `regime-${m.regime.label}` }, `${pct(m.changePct)} ${m.regime.label}`),
+    ])),
+  ]);
+
+  const deck = el('div', { className: 'bs-deck' }, [colOne, colTwo, colThree]);
+
+  // --- the government band, with every sub-figure kept ---
+  const d = state.debt;
+  const dv = state.defense;
+  const aid = state.aid;
+  const ch = (k) => (d?.changes?.[k] ? shortMoney(d.changes[k].abs) : null);
+  const band = el('div', { className: 'bs-band' }, [
+    d ? bsCell('Public debt', bigMoney(d.total), [
+      ['Held by public', bigMoney(d.heldByPublic)],
+      ['Intragovernmental', bigMoney(d.intragovernmental)],
+      ch('d1') ? ['Day', ch('d1')] : null,
+      ch('m1') ? ['Month', ch('m1')] : null,
+      ch('y1') ? ['Year', ch('y1')] : null,
+    ]) : null,
+    dv ? bsCell(`Department of War · FY${dv.fiscalYear}`, bigMoney(dv.obligated), [
+      ['Outlayed', bigMoney(dv.outlayed)],
+      ['Authority', bigMoney(dv.budgetaryResources)],
+      ['Obligated', `${dv.shareObligated.toFixed(1)}%`],
+      ['Through period', `${dv.throughPeriod} of 12`],
+    ]) : null,
+    aid ? bsCell('Foreign aid', bigMoney(aid.total), [
+      ['Countries', String(aid.countries?.length ?? 0)],
+      ...(aid.countries ?? []).slice(0, 3).map((c) => [c.name, bigMoney(c.amount)]),
+    ]) : null,
+  ].filter(Boolean));
+
+  // --- climate and immigration ---
+  const temp = (state.climate ?? []).find((o) => o.metric === 'temp_anomaly' && !o.unavailable);
+  const arctic = (state.climate ?? []).find((o) => o.metric === 'sea_ice_north' && !o.unavailable);
+  const hz = state.hazards?.events ?? [];
+  const mh = state.migration?.headline;
+  const kinds = {};
+  for (const e of hz) kinds[e.event_type] = (kinds[e.event_type] ?? 0) + 1;
+
+  const band2 = el('div', { className: 'bs-band bs-band-2' }, [
+    bsCell('Climate', temp ? `${temp.value >= 0 ? '+' : '−'}${Math.abs(temp.value).toFixed(2)}°C` : '—', [
+      temp ? ['vs', temp.baseline] : null,
+      temp?.percentile != null ? ['Percentile', String(temp.percentile)] : null,
+      arctic ? ['Arctic ice', `${arctic.value.toFixed(2)}M km²`] : null,
+      arctic?.anomaly != null ? ['vs baseline', `${arctic.anomaly.toFixed(2)}M km²`] : null,
+    ]),
+    bsCell('Active hazards', String(hz.length),
+      Object.entries(kinds).map(([k, n]) => [HAZARD_PLURAL[k] ?? k, String(n)])),
+    mh ? bsCell('Immigration', bigPeople(mh.foreignBorn), [
+      ['Born abroad, of', bigPeople(mh.population)],
+      mh.share != null ? ['Share', `${mh.share.toFixed(1)}%`] : null,
+      ['Year', String(mh.year)],
+    ]) : null,
+  ].filter(Boolean));
+
+  host.replaceChildren(...[masthead, epigraph, deck, band, band2].filter(Boolean));
 }
 
 // ---- level 2: domains -----------------------------------------------------
