@@ -637,7 +637,7 @@ function renderPulse(host) {
 
   // --- column two: what the numbers say ---
   const colTwo = el('div', { className: 'bs-col bs-ruled' }, [
-    bsHead('What matters', 'interpretation', '#/markets', 'Markets →'),
+    bsHead('Markets', 'interpretation', '#/markets', 'Full board →'),
     ...(state.whatMatters ?? []).map((n) => el('p', { className: 'bs-note' }, [
       n.text, el('em', {}, n.evidence),
     ])),
