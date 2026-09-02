@@ -14,6 +14,8 @@ import { clusterStories } from './lib/cluster.mjs';
 import { scoreSubject, domainPulse } from './lib/activity.mjs';
 import { recordHistory } from './lib/history.mjs';
 import { dailyScripture } from './lib/scripture.mjs';
+import { climateState } from './lib/climate.mjs';
+import { activeHazards, earthquakeHistory } from './lib/hazards.mjs';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(ROOT, 'public');
@@ -68,7 +70,8 @@ async function loadSituations() {
 }
 
 export async function buildState() {
-  const [feedEntries, marketsEntry, situations, scripture, debtEntry, aidEntry, defenseEntry] = await Promise.all([
+  const [feedEntries, marketsEntry, situations, scripture, debtEntry, aidEntry, defenseEntry,
+    climateEntry, quakeHistoryEntry, hazardsEntry] = await Promise.all([
     Promise.all(SOURCES.map(async (s) => [s, await cached(s.id, TTL.feed, () => loadSource(s))])),
     cached('markets', TTL.market, loadMarkets),
     loadSituations(),
@@ -76,6 +79,13 @@ export async function buildState() {
     cached('debt', TTL.feed, usDebt),
     cached('aid', 6 * 60 * 60 * 1000, foreignAid),   // annual data; refetch rarely
     cached('defense', 6 * 60 * 60 * 1000, defenseSpending),
+    // Cadence follows the data, not the page. Sea ice and CO2 move once a day,
+    // GISTEMP and NCEI once a month; refetching those on the feed interval
+    // would be several megabytes an hour for numbers that cannot have changed.
+    cached('climate', 6 * 60 * 60 * 1000, climateState),
+    cached('quakeHistory', 6 * 60 * 60 * 1000, earthquakeHistory),
+    // Active hazards do change through the day, so they follow the feed TTL.
+    cached('hazards', TTL.feed, activeHazards),
   ]);
 
   const status = [];
@@ -181,6 +191,12 @@ export async function buildState() {
     wire,
     official,
     places,
+    climate: climateEntry.data ?? null,
+    climateError: climateEntry.error ?? null,
+    quakeHistory: quakeHistoryEntry.data ?? null,
+    quakeHistoryError: quakeHistoryEntry.error ?? null,
+    hazards: hazardsEntry.data ?? null,
+    hazardsError: hazardsEntry.error ?? null,
     hazard,
     status,
   };

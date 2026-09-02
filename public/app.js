@@ -1213,26 +1213,207 @@ function renderIndiana(host) {
   );
 }
 
-function renderClimate(host) {
-  const hazard = state.hazard ?? [];
-  const quakes = hazard.filter((h) => h.outlet === 'USGS');
-  const alerts = hazard.filter((h) => h.outlet === 'NWS');
-  host.replaceChildren(
-    el('section', { className: 'section' }, [
-      (() => {
-        const l = sectionLabel('Climate & hazard', `${hazard.length} events in the last 24 hours`);
-        l.append(infoTip(
-          'Sources are NWS extreme-severity alerts and USGS earthquakes above M4.5 — near-term hazard, '
-          + 'not long-run climate trend. No temperature or emissions series is wired in yet.',
-        ));
-        return l;
-      })(),
-      subLabel('Severe weather', `${alerts.length} active`),
-      ...(alerts.length ? alerts.map((a) => storyRow(a, { showOutlet: false })) : [el('p', { className: 'muted' }, 'No extreme alerts active.')]),
-      subLabel('Seismic', `${quakes.length} at M4.5 or above`),
-      ...quakes.map((q) => storyRow(q, { showOutlet: false })),
-    ]),
+// ---- climate: earth intelligence ------------------------------------------
+
+// Provenance for one observation or dataset, in the tip the rest of the page
+// uses. Everything needed to check a number: what it measures, against what,
+// from whom, how fresh, and whether it is observed or analysed.
+function sourceTip(src, extra = []) {
+  return infoTip(
+    el('b', {}, 'Source. '), src.url ? ext(src.url, src.name) : (src.name ?? 'unknown'),
+    src.type ? ` · ${src.type}` : '', '. ',
+    src.note ? `${src.note} ` : '',
+    ...extra,
   );
+}
+
+const BAND_WORD = { normal: 'normal', elevated: 'elevated', high: 'high', extreme: 'extreme' };
+
+// One measured line: value, what it is measured against, how unusual, trend.
+function observationRow(o) {
+  if (o.unavailable) {
+    return el('div', { className: 'obs-row is-out' }, [
+      el('span', { className: 'obs-name' }, [o.label, sourceTip(o.source)]),
+      el('span', { className: 'obs-val' }, '—'),
+      el('span', { className: 'obs-base muted' }, `Unavailable. ${o.reason}`),
+      el('span', {}), el('span', {}),
+    ]);
+  }
+  const signed = (n, d = 2) => `${n >= 0 ? '+' : '−'}${Math.abs(n).toFixed(d)}`;
+  return el('div', { className: 'obs-row' }, [
+    el('span', { className: 'obs-name' }, [
+      o.label,
+      sourceTip(o.source, [
+        el('b', {}, 'Baseline. '), o.baseline ? `Anomalies are against ${o.baseline}. ` : 'Absolute concentration, not an anomaly. ',
+        el('b', {}, 'Updated. '), `${fmtDate(new Date(o.timestamp).toISOString().slice(0, 10))}, ${o.cadence}. `,
+        o.percentile != null ? `Ranked at the ${o.percentile}th percentile of its own record.` : '',
+      ]),
+    ]),
+    el('span', { className: 'n obs-val' }, [
+      // Only sign a value that is itself a departure. Sea ice extent is an
+      // absolute quantity: printing it as "+4.73" read as growth of 4.73M km²
+      // when the ice is 1.74M km² below its baseline.
+      o.valueIsAnomaly ? signed(o.value) : o.value.toFixed(2),
+      el('span', { className: 'obs-unit' }, o.unit),
+    ]),
+    el('span', { className: 'obs-base' },
+      o.valueIsAnomaly ? `vs ${o.baseline}` : o.baseline ? 'extent' : 'absolute'),
+    el('span', { className: `band band-${o.band ?? 'none'}` }, o.band ? BAND_WORD[o.band] : ''),
+    el('span', { className: 'spark-cell' },
+      sparkline({ history: (o.series ?? []).map((p) => p.c), changePct: o.anomaly ?? 1 }, 84, 18)),
+    el('span', { className: 'obs-note muted' }, o.compare ?? ''),
+  ]);
+}
+
+const HAZARD_WORD = {
+  earthquake: 'Earthquake', cyclone: 'Cyclone', volcano: 'Volcano',
+  tsunami: 'Tsunami', wildfire: 'Wildfire',
+};
+// Spelled out rather than suffixed, because "Volcanos" is not a word.
+const HAZARD_PLURAL = {
+  earthquake: 'Earthquakes', cyclone: 'Cyclones', volcano: 'Volcanoes',
+  tsunami: 'Tsunamis', wildfire: 'Wildfires',
+};
+
+// How big is it, in the unit the responsible agency publishes — never
+// normalised into a single invented severity scale across hazard types.
+function hazardMagnitude(e) {
+  if (e.event_type === 'earthquake') return `M ${e.magnitude?.toFixed(1) ?? '?'}`;
+  if (e.event_type === 'cyclone') return e.magnitude ? `${e.magnitude} kt` : '—';
+  if (e.event_type === 'volcano') return e.colour_code ?? e.subtype ?? '—';
+  return e.subtype ?? '—';
+}
+
+function hazardRow(e) {
+  const where = e.name ? `${e.name}${e.region && e.region !== e.name ? ` · ${e.region}` : ''}` : (e.region ?? 'unknown');
+  return el('a', {
+    className: 'haz-row', href: e.source_url ?? '#', target: '_blank', rel: 'noopener noreferrer',
+  }, [
+    el('span', { className: `haz-kind haz-${e.event_type}` }, HAZARD_WORD[e.event_type] ?? e.event_type),
+    el('span', { className: 'haz-where' }, clip(where, 58)),
+    el('span', { className: 'n haz-mag' }, hazardMagnitude(e)),
+    el('span', { className: 'haz-extra muted' }, [
+      e.event_type === 'earthquake' && e.depth_km != null ? `${Math.round(e.depth_km)} km deep` : '',
+      e.event_type === 'earthquake' && e.tsunami ? ' · tsunami flag' : '',
+      e.event_type === 'cyclone' && e.pressure_mb ? `${e.pressure_mb} mb` : '',
+      e.event_type === 'cyclone' && e.subtype ? ` · ${e.subtype}` : '',
+      e.event_type === 'volcano' && e.subtype ? e.subtype.toLowerCase() : '',
+    ].filter(Boolean).join('')),
+    el('span', { className: 'haz-when muted' }, e.start_time ? ago(e.start_time) : ''),
+    el('span', { className: 'haz-src muted' }, e.source),
+  ]);
+}
+
+function renderClimate(host) {
+  const climate = state.climate ?? [];
+  const hz = state.hazards ?? { events: [], errors: [], unavailable: [] };
+  const qh = state.quakeHistory;
+  const alerts = (state.hazard ?? []).filter((h) => h.outlet === 'NWS');
+
+  // --- global state ---
+  const unusual = climate.filter((o) => !o.unavailable && (o.band === 'high' || o.band === 'extreme')).length;
+  const stateSection = el('section', { className: 'section' }, [
+    (() => {
+      const l = sectionLabel('Global state',
+        unusual ? `${unusual} of ${climate.length} measures outside their normal range` : 'measured against each dataset’s own baseline');
+      l.append(infoTip(
+        el('b', {}, 'Baselines differ and are not interchangeable. '),
+        'GISTEMP is against 1951–1980, NCEI against 1901–2000, NSIDC against 1981–2010. Each row states '
+        + 'its own, and none are combined. ',
+        el('b', {}, 'Unusual '),
+        'is the value’s position in that dataset’s own historical distribution — for sea ice, the '
+        + 'percentile bands NSIDC publishes for that day of the year; for the rest, the rank of the value '
+        + 'against the same calendar month across the record. No threshold is invented here. ',
+        el('b', {}, 'None of this is real-time: '),
+        'sea ice and CO₂ are a day behind, the temperature series are monthly.',
+      ));
+      return l;
+    })(),
+    ...climate.map(observationRow),
+  ]);
+
+  // --- active hazards ---
+  const byKind = {};
+  for (const e of hz.events) (byKind[e.event_type] ??= []).push(e);
+  const order = ['tsunami', 'cyclone', 'volcano', 'earthquake'];
+
+  const hazSection = el('section', { className: 'section' }, [
+    (() => {
+      const l = sectionLabel('Active hazards', `${hz.events.length} events now`,
+        el('a', { href: '#/climate' }, ''));
+      l.append(infoTip(
+        el('b', {}, 'Each hazard comes from the agency responsible for it: '),
+        'USGS for earthquakes and US volcano alert levels, NOAA’s National Hurricane Center for Atlantic '
+        + 'and eastern Pacific cyclones, the NWS tsunami centres for tsunami messages. ',
+        el('b', {}, 'Severity is left in each agency’s own unit '),
+        '— moment magnitude, sustained wind, aviation colour code — rather than flattened into one scale '
+        + 'that would imply a comparison nobody makes. ',
+        el('b', {}, 'Coverage is not global for every type: '),
+        'the NHC covers two basins, and the volcano alert levels are US observatories only.',
+      ));
+      return l;
+    })(),
+    ...order.flatMap((kind) => {
+      const list = byKind[kind] ?? [];
+      if (!list.length) return [];
+      return [subLabel(HAZARD_PLURAL[kind] ?? kind, `${list.length}`), ...list.slice(0, 12).map(hazardRow)];
+    }),
+    ...hz.errors.map((e) => el('p', { className: 'muted' },
+      `${HAZARD_WORD[e.kind] ?? e.kind} unavailable. ${e.error} Nothing is shown in its place.`)),
+    ...hz.unavailable.map((u) => el('p', { className: 'muted' },
+      `${HAZARD_WORD[u.kind] ?? u.kind} not wired in. ${u.reason}`)),
+  ]);
+
+  // --- earthquakes, with history ---
+  const quakeSection = qh ? el('section', { className: 'section' }, [
+    (() => {
+      const l = sectionLabel('Earthquakes', 'counts against the catalogue');
+      l.append(sourceTip(qh.source, [
+        el('b', {}, 'Why these magnitudes. '),
+        'The global catalogue is complete at M4.5 and above for this period, so a change in count is a '
+        + 'change in seismicity. At lower magnitudes it would mostly measure how much the detection '
+        + 'network has improved. ',
+        el('b', {}, 'Not a climate signal. '),
+        'Earthquakes are a natural hazard; nothing here should be read as evidence about climate.',
+      ]));
+      return l;
+    })(),
+    el('div', { className: 'quake-grid' }, [
+      el('span', { className: 'qh muted' }, 'Window'),
+      ...qh.windows[0].counts.map((c) => el('span', { className: 'qh muted n' }, `M ${c.magnitude}+`)),
+      ...qh.windows.flatMap((w) => [
+        el('span', { className: 'qw' }, w.label),
+        ...w.counts.map((c) => el('span', { className: 'n qv' }, String(c.count ?? '·'))),
+      ]),
+    ]),
+    subLabel(`${qh.ytd.year} to date, M${qh.ytd.magnitude}+`,
+      `through ${fmtDate(qh.ytd.through)}`),
+    el('div', { className: 'ytd-line' }, [
+      el('span', { className: 'n ytd-n' }, String(qh.ytd.count)),
+      el('span', { className: 'muted' }, `this year · ${qh.ytd.average} average over the previous ${qh.ytd.years} years, same window`),
+      qh.ytd.deltaPct != null
+        ? el('span', { className: `ytd-delta ${qh.ytd.deltaPct >= 0 ? 'up' : 'down'}` },
+          `${qh.ytd.deltaPct >= 0 ? '+' : '−'}${Math.abs(qh.ytd.deltaPct)}%`)
+        : null,
+    ]),
+  ]) : null;
+
+  // --- severe weather, the existing NWS lane ---
+  const wxSection = el('section', { className: 'section' }, [
+    (() => {
+      const l = sectionLabel('Severe weather', `${alerts.length} extreme alerts active`);
+      l.append(infoTip(
+        'NWS alerts at extreme severity only, and United States only. There is no equivalent global '
+        + 'feed, so an empty list here means no US extreme alert — not a quiet planet.',
+      ));
+      return l;
+    })(),
+    ...(alerts.length
+      ? alerts.map((a) => storyRow(a, { showOutlet: false }))
+      : [el('p', { className: 'muted' }, 'No extreme alerts active in the United States.')]),
+  ]);
+
+  host.replaceChildren(...[stateSection, hazSection, quakeSection, wxSection].filter(Boolean));
 }
 
 function renderWire(host) {
