@@ -86,6 +86,7 @@ export async function buildState() {
       id: source.id,
       outlet: source.outlet,
       lane: source.lane,
+      place: source.place ?? null,
       ok: !entry.error,
       error: entry.error,
       fetchedAt: entry.at,
@@ -120,6 +121,21 @@ export async function buildState() {
 
   const wire = clusterStories(lanes.wire).slice(0, 40);
   const official = roundRobin(lanes.official, 6).slice(0, 40);
+
+  // A locality view needs its own slice rather than a filter over the two
+  // above. Those are capped across every outlet, so filtering them afterwards
+  // shows only the local stories that won a ranking against the world — 9 of
+  // 48 when this was written, with one outlet contributing nothing at all.
+  // Same items, same clustering, just not in competition.
+  const places = {};
+  for (const place of new Set(SOURCES.map((s) => s.place).filter(Boolean))) {
+    const ids = new Set(SOURCES.filter((s) => s.place === place).map((s) => s.id));
+    const mine = (lane) => lane.filter((i) => ids.has(i.sourceId));
+    places[place] = {
+      wire: clusterStories(mine(lanes.wire)).slice(0, 60),
+      official: roundRobin(mine(lanes.official), 12).slice(0, 60),
+    };
+  }
   const hazard = lanes.hazard.sort(byTime).slice(0, 20);
   const marketList = marketsEntry.data ?? [];
   const marketsError = marketsEntry.error;
@@ -162,6 +178,7 @@ export async function buildState() {
     markets: marketList,
     wire,
     official,
+    places,
     hazard,
     status,
   };

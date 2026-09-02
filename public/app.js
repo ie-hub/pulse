@@ -1047,6 +1047,54 @@ function renderGovernment(host) {
   defense.paintChart?.();
 }
 
+// Indiana and Noblesville. These sources also feed the main wire and the
+// government rail — this view gathers them so there is somewhere to look,
+// rather than hunting them out of a stream ranked against world conflict.
+//
+// Outlets are read from the source status by their `place` tag, so adding a
+// source in sources.mjs is still a one-line change.
+function renderIndiana(host) {
+  // The server builds this slice separately from the global lanes. Filtering
+  // state.wire instead would show only the local stories that outranked the
+  // world's — a fifth of them, with one outlet dropping out entirely.
+  const place = state.places?.indiana ?? { wire: [], official: [] };
+  const official = place.official;
+  const wire = place.wire;
+  const bodies = [...new Set(official.map((o) => o.outlet))];
+
+  host.replaceChildren(
+    el('section', { className: 'section' }, [
+      (() => {
+        const l = sectionLabel('Official', `${official.length} items from ${bodies.length} bodies`);
+        l.append(infoTip(
+          'Noblesville publishes its news and meeting agendas as CivicPlus feeds. The Indiana Economic '
+          + 'Development Corporation publishes no feed of any kind, so its items are read from its news '
+          + 'page — scraped markup, not a published feed, and only the articles currently featured there.',
+        ));
+        return l;
+      })(),
+      ...(bodies.length ? bodies.flatMap((b) => {
+        const items = official.filter((o) => o.outlet === b);
+        return [subLabel(b, `${items.length} · latest ${ago(items[0]?.time)}`),
+          ...items.map((i) => storyRow(i, { showOutlet: false }))];
+      }) : [el('p', { className: 'muted' }, 'No official postings in the current window.')]),
+    ]),
+    el('section', { className: 'section' }, [
+      (() => {
+        const l = sectionLabel('Regional wire', `${wire.length} stories`);
+        l.append(infoTip(
+          'Indiana Capital Chronicle covers the state, Mirror Indy the Indianapolis metro, and Current '
+          + 'and the Hamilton County Reporter cover Noblesville and its neighbours. These stories also '
+          + 'appear in the main wire, ranked against everything else.',
+        ));
+        return l;
+      })(),
+      ...(wire.length ? wire.map((s) => storyRow(s))
+        : [el('p', { className: 'muted' }, 'No regional stories in the current window.')]),
+    ]),
+  );
+}
+
 function renderClimate(host) {
   const hazard = state.hazard ?? [];
   const quakes = hazard.filter((h) => h.outlet === 'USGS');
@@ -1244,6 +1292,7 @@ const NAV = [
   { hash: '#/markets', label: 'Markets' },
   { hash: '#/government', label: 'Government' },
   { hash: '#/climate', label: 'Climate' },
+  { hash: '#/indiana', label: 'Indiana' },
   { hash: '#/wire', label: 'Wire' },
 ];
 
@@ -1258,7 +1307,8 @@ function renderNav() {
 
 const ROUTES = {
   '#/': renderPulse, '#/world': renderWorld, '#/markets': renderMarkets,
-  '#/government': renderGovernment, '#/climate': renderClimate, '#/wire': renderWire,
+  '#/government': renderGovernment, '#/climate': renderClimate,
+  '#/indiana': renderIndiana, '#/wire': renderWire,
 };
 
 function route() {
