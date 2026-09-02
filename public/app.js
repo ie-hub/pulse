@@ -1629,9 +1629,34 @@ function renderImmigration(host) {
     return;
   }
 
+  // The plain statement first: how many people are here, how many were born
+  // abroad, what share that is. The three grouped measures below answer
+  // different questions and were doing a poor job of answering this one.
+  const h = mig.headline;
+  const headline = h ? el('div', { className: 'mig-headline' }, [
+    el('span', { className: 'mig-big' }, bigPeople(h.foreignBorn)),
+    el('span', { className: 'mig-said' }, 'people living in the United States were born abroad'),
+    el('span', { className: 'mig-of' }, [
+      h.share != null ? el('b', {}, `${h.share.toFixed(1)}%`) : null,
+      h.share != null ? ' of a population of ' : 'Of a population of ',
+      el('b', {}, bigPeople(h.population)),
+      ` · ${h.year}, ${h.period_type}`,
+      infoTip(
+        el('b', {}, 'Foreign-born '), 'means born outside the United States, whatever a person’s '
+        + 'citizenship now is. Many are naturalised US citizens. It is a resident population at a '
+        + 'point in time, not a count of arrivals. ',
+        el('b', {}, 'The share is the publisher’s own figure, '),
+        'not these two numbers divided: dividing them gives about 15.4%, because the World Bank '
+        + 'computes the share against a mid-year denominator that differs slightly from the total '
+        + 'population series. The published figure is used rather than one derived here. ',
+        el('b', {}, 'Source. '), ext(h.source.url, h.source.name), ` · ${h.source.type} · ${h.source.cadence}.`,
+      ),
+    ]),
+  ]) : null;
+
   const usSection = el('section', { className: 'section' }, [
     (() => {
-      const l = sectionLabel('United States', 'stock, flow and protection — three different things');
+      const l = sectionLabel('United States', 'population, arrivals and protection');
       l.append(infoTip(
         el('b', {}, 'These rows do not add up, and are not meant to. '),
         'A migrant stock is how many foreign-born people are present at a moment. Net migration is '
@@ -1645,7 +1670,11 @@ function renderImmigration(host) {
       ));
       return l;
     })(),
-    ...migrationGroup('Population present', 'point-in-time stock', mig.stock),
+    ...(headline ? [headline] : []),
+    // The share is already the headline's second sentence; repeating it as a row
+    // straight underneath was the clutter. What the group adds is the history.
+    ...migrationGroup('Population, over time', 'point-in-time stock',
+      mig.stock.filter((m) => m.metric !== 'migrant_share' || !headline)),
     ...migrationGroup('Annual flow', 'arrivals minus departures', mig.flow),
     ...migrationGroup('Protection', 'end-of-year caseload', mig.protection),
     ...(mig.errors ?? []).map((e) => el('p', { className: 'muted' },

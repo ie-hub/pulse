@@ -361,6 +361,13 @@ a { color: inherit; text-decoration: none; }
 
 /* ---- immigration -------------------------------------------------------- */
 
+/* The plain statement, before the grouped measures. */
+.mig-headline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; padding: 16px 0 14px; }
+.mig-big { font-size: 34px; font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.mig-said { font-size: 14px; color: var(--mid); }
+.mig-of { flex-basis: 100%; display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--mid); }
+.mig-of b { color: var(--ink); font-weight: 500; font-variant-numeric: tabular-nums; }
+
 .mig-row {
   display: grid;
   grid-template-columns: minmax(0, 220px) 92px 62px 128px 168px 90px minmax(0, 1fr);
@@ -734,6 +741,7 @@ a { color: inherit; text-decoration: none; }
   .obs-row .obs-base, .obs-row .spark-cell, .obs-row .obs-note { display: none; }
   .haz-row { grid-template-columns: 84px minmax(0, 1fr) 76px; gap: 10px; }
   /* Keep the measure, the figure and its period; drop the commentary. */
+  .mig-big { font-size: 28px; }
   .mig-row { grid-template-columns: minmax(0, 1fr) 86px 58px; gap: 10px; }
   .mig-row .mig-chg, .mig-row .mig-long, .mig-row .spark-cell, .mig-row .mig-stand { display: none; }
   .mig-cmp { grid-template-columns: minmax(0, 1fr) 72px 54px; gap: 10px; }
