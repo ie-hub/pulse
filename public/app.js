@@ -904,7 +904,7 @@ function renderMarkets(host) {
 
   if (notes.length) {
     sections.push(el('section', { className: 'section' }, [
-      sectionLabel('What matters', 'read from today’s data — interpretation, not advice'),
+      sectionLabel('What matters'),
       ...notes.map((n) => el('p', { className: 'matters' }, [
         n.text, el('span', { className: 'matters-src' }, n.evidence),
       ])),
@@ -913,7 +913,7 @@ function renderMarkets(host) {
 
   if (signals.length) {
     sections.push(el('section', { className: 'section' }, [
-      sectionLabel('Signals', 'derived by this dashboard — not published indices'),
+      sectionLabel('Signals'),
       el('div', { className: 'signals' }, signals.map((sig) => el('div', { className: 'signal', title: sig.basis }, [
         el('span', { className: 'signal-k' }, sig.label),
         el('span', { className: 'signal-v' }, [
@@ -930,7 +930,7 @@ function renderMarkets(host) {
   const explorer = marketExplorer(markets);
   if (explorer) {
     sections.push(el('section', { className: 'section' }, [
-      sectionLabel('Chart', 'group, instrument and range'),
+      sectionLabel('Chart'),
       explorer,
     ]));
   }
@@ -1888,6 +1888,165 @@ function initNavToggle() {
   WIDE.addEventListener('change', syncWidth);
 }
 
+// ---- search ---------------------------------------------------------------
+
+// Everything the dashboard is currently holding, flattened into one list of
+// things you might look for. Built per query rather than kept in memory: the
+// state object is replaced wholesale on each refresh, and a cached index would
+// quietly go stale against it.
+function searchIndex() {
+  const out = [];
+  const push = (kind, label, meta, target) => {
+    if (label) out.push({ kind, label: String(label), meta: meta ?? '', ...target });
+  };
+
+  NAV.forEach((n) => push('Section', n.label, '', { href: n.hash }));
+  allSubjects().forEach((s) => push('Subject', s.name, s.region, { href: subjectHref(s) }));
+  (state.markets ?? []).forEach((m) => push('Instrument', m.name, m.group, { href: '#/markets' }));
+
+  (state.wire ?? []).forEach((w) => push('Story', w.title,
+    (w.outlets ?? []).map((o) => o.outlet).join(' · '), { url: w.outlets?.[0]?.link }));
+  (state.official ?? []).forEach((o) => push('Posting', o.title, o.outlet, { url: o.link }));
+  (state.places?.indiana?.official ?? []).forEach((o) => push('Posting', o.title, o.outlet, { url: o.link }));
+  (state.places?.indiana?.wire ?? []).forEach((w) => push('Story', w.title,
+    (w.outlets ?? []).map((o) => o.outlet).join(' · '), { url: w.outlets?.[0]?.link }));
+
+  (state.hazards?.events ?? []).forEach((e) => push('Hazard',
+    e.name ?? e.region, `${HAZARD_WORD[e.event_type] ?? e.event_type}${e.magnitude ? ` · ${e.magnitude}` : ''}`,
+    { url: e.source_url }));
+  // The dashboard's own readings are things you would look for by name — a
+  // search for "gold" should find the sentence about gold, not only the row.
+  (state.whatMatters ?? []).forEach((n) => push('Reading', n.text, n.evidence, { href: '#/markets' }));
+  (state.signals ?? []).forEach((s) => push('Signal', `${s.label} ${s.value}`, s.basis, { href: '#/markets' }));
+
+  (state.climate ?? []).forEach((o) => push('Measure', o.label, o.source?.name, { href: '#/climate' }));
+  [...(state.migration?.stock ?? []), ...(state.migration?.flow ?? []),
+    ...(state.migration?.protection ?? [])].forEach((m) => push('Measure', m.label, 'Immigration', { href: '#/immigration' }));
+
+  if (state.debt) push('Figure', 'Public debt', bigMoney(state.debt.total), { href: '#/government' });
+  if (state.defense) push('Figure', 'Defence obligated', bigMoney(state.defense.obligated), { href: '#/government' });
+  if (state.aid) push('Figure', 'Foreign aid', bigMoney(state.aid.total), { href: '#/government' });
+  (state.aid?.countries ?? []).slice(0, 30).forEach((c) =>
+    push('Figure', `${c.name} — foreign aid`, bigMoney(c.amount), { href: '#/government' }));
+
+  // A Noblesville posting sits in both the global official rail and the
+  // Indiana slice; the same item should not be offered twice.
+  const seen = new Set();
+  return out.filter((r) => {
+    const key = `${r.kind}|${r.label}|${r.url ?? r.href ?? ''}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+// Sections and subjects first: a two-letter query should offer the page, not
+// the twentieth headline that happens to contain those letters.
+const SEARCH_RANK = { Section: 0, Subject: 1, Instrument: 2, Figure: 3, Measure: 4, Signal: 5, Hazard: 6, Reading: 7, Posting: 8, Story: 9 };
+
+function searchRun(query, index) {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  return index
+    .map((item) => {
+      const hay = `${item.label} ${item.meta}`.toLowerCase();
+      const at = hay.indexOf(q);
+      if (at < 0) return null;
+      // A match at the start of the label beats one buried mid-sentence.
+      const starts = item.label.toLowerCase().startsWith(q) ? 0 : 1;
+      return { ...item, score: (SEARCH_RANK[item.kind] ?? 9) * 100 + starts * 10 + Math.min(at, 9) };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.score - b.score)
+    .slice(0, 40);
+}
+
+function initSearch() {
+  const root = el('div', { className: 'search-root', hidden: true, role: 'dialog', 'aria-label': 'Search Pulse' });
+  const veil = el('div', { className: 'search-veil' });
+  const input = el('input', {
+    className: 'search-input', type: 'search', placeholder: 'Search subjects, instruments, headlines…',
+    autocomplete: 'off', spellcheck: 'false', 'aria-label': 'Search Pulse',
+  });
+  const list = el('div', { className: 'search-list' });
+  const panel = el('div', { className: 'search-panel' }, [
+    el('div', { className: 'search-head' }, [input, el('kbd', {}, 'esc')]),
+    list,
+  ]);
+  root.append(veil, panel);
+  document.body.append(root);
+
+  let results = [];
+  let cursor = 0;
+
+  const close = () => {
+    root.hidden = true;
+    document.body.style.overflow = '';
+    input.value = '';
+    list.replaceChildren();
+  };
+  const open = () => {
+    root.hidden = false;
+    document.body.style.overflow = 'hidden';
+    input.focus();
+  };
+
+  const go = (r) => {
+    if (!r) return;
+    close();
+    if (r.href) location.hash = r.href;
+    else if (r.url) window.open(r.url, '_blank', 'noopener,noreferrer');
+  };
+
+  const paint = () => {
+    if (!results.length) {
+      list.replaceChildren(el('p', { className: 'search-empty muted' },
+        input.value.trim() ? 'Nothing matches.' : 'Type to search what the dashboard is holding.'));
+      return;
+    }
+    list.replaceChildren(...results.map((r, i) => {
+      const row = el('button', {
+        className: `search-row${i === cursor ? ' is-on' : ''}`, type: 'button',
+      }, [
+        el('span', { className: 'search-kind' }, r.kind),
+        el('span', { className: 'search-label' }, clip(r.label, 96)),
+        el('span', { className: 'search-meta muted' }, clip(r.meta, 34)),
+      ]);
+      row.addEventListener('click', () => go(r));
+      return row;
+    }));
+    list.children[cursor]?.scrollIntoView({ block: 'nearest' });
+  };
+
+  input.addEventListener('input', () => {
+    results = searchRun(input.value, searchIndex());
+    cursor = 0;
+    paint();
+  });
+
+  root.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { close(); return; }
+    if (e.key === 'ArrowDown' || (e.key === 'Tab' && !e.shiftKey)) {
+      e.preventDefault(); cursor = Math.min(cursor + 1, results.length - 1); paint();
+    } else if (e.key === 'ArrowUp' || (e.key === 'Tab' && e.shiftKey)) {
+      e.preventDefault(); cursor = Math.max(cursor - 1, 0); paint();
+    } else if (e.key === 'Enter') {
+      e.preventDefault(); go(results[cursor]);
+    }
+  });
+  veil.addEventListener('click', close);
+  $('searchToggle').addEventListener('click', () => { open(); paint(); });
+
+  document.addEventListener('keydown', (e) => {
+    const typing = /^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName ?? '');
+    if ((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault(); root.hidden ? (open(), paint()) : close();
+    } else if (e.key === '/' && !typing && root.hidden) {
+      e.preventDefault(); open(); paint();
+    }
+  });
+}
+
 function initChrome() {
   let saved = null;
   try { saved = localStorage.getItem('pulse-theme'); } catch { /* blocked */ }
@@ -1943,6 +2102,7 @@ async function refresh() {
 
 initChrome();
 initNavToggle();
+initSearch();
 window.addEventListener('hashchange', route);
 window.addEventListener('resize', () => { if (redraw) redraw(); });
 refresh();

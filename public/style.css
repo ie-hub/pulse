@@ -591,6 +591,38 @@ a.bs-kv:hover span { color: var(--accent); }
 .tip-pop a { color: var(--accent); }
 .tip-pop a:hover { text-decoration: underline; }
 
+/* ---- search ------------------------------------------------------------- */
+
+.search-root { position: fixed; inset: 0; z-index: 80; }
+.search-veil { position: absolute; inset: 0; background: color-mix(in srgb, var(--ink) 22%, transparent); }
+.search-panel {
+  position: relative; margin: 12vh auto 0; max-width: 640px; width: calc(100% - 32px);
+  background: var(--raise); border: 1px solid var(--line);
+  box-shadow: 0 22px 60px -28px rgba(23, 23, 23, 0.45);
+  display: flex; flex-direction: column; max-height: 68vh;
+}
+.search-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.search-input {
+  flex: 1; min-width: 0; border: 0; background: none; outline: none;
+  font: inherit; font-size: 15px; color: var(--ink);
+}
+.search-input::placeholder { color: var(--dim); }
+.search-head kbd {
+  font: inherit; font-size: 10.5px; letter-spacing: 0.04em; color: var(--dim);
+  border: 1px solid var(--line); border-radius: 3px; padding: 2px 5px;
+}
+.search-list { overflow-y: auto; padding: 4px 0; }
+.search-row {
+  display: grid; grid-template-columns: 82px minmax(0, 1fr) auto; gap: 14px; align-items: baseline;
+  width: 100%; padding: 9px 16px; border: 0; background: none; cursor: pointer;
+  font: inherit; text-align: left; color: var(--ink);
+}
+.search-row.is-on { background: var(--bg); }
+.search-kind { font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); }
+.search-label { font-size: 13.5px; }
+.search-meta { font-size: 11.5px; white-space: nowrap; }
+.search-empty { padding: 20px 16px; font-size: 13px; }
+
 /* ---- pull-out drawer --------------------------------------------------- */
 
 .drawer-root { position: fixed; inset: 0; z-index: 60; }
@@ -842,6 +874,9 @@ a.bs-kv:hover span { color: var(--accent); }
      zeroed it and pushed the bar flush to the screen edge. */
   .topbar-inner { height: auto; flex-wrap: wrap; gap: 10px 20px; padding: 12px var(--pad); }
   .brand { font-size: 22px; }
+  .search-panel { margin-top: 6vh; max-height: 78vh; }
+  .search-row { grid-template-columns: 70px minmax(0, 1fr); }
+  .search-row .search-meta { display: none; }
   /* Six items are wider than a phone, and wrapping them cost a fifth of the
      screen. They collapse behind the control instead and open as a list. */
   .nav-toggle { display: inline-flex; }
