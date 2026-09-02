@@ -1778,11 +1778,11 @@ function renderImmigration(host) {
 
 const NAV = [
   { hash: '#/world', label: 'World' },
+  { hash: '#/indiana', label: 'Indiana' },
   { hash: '#/markets', label: 'Markets' },
   { hash: '#/government', label: 'Government' },
   { hash: '#/climate', label: 'Climate' },
   { hash: '#/immigration', label: 'Immigration' },
-  { hash: '#/indiana', label: 'Indiana' },
 ];
 
 function renderNav() {

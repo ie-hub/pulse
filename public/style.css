@@ -59,6 +59,8 @@ body {
 a { color: inherit; text-decoration: none; }
 
 .wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 var(--pad); }
+/* the page needs a foot — the last band otherwise ends flush with the fold */
+#view { padding-bottom: 40px; }
 .muted { color: var(--mid); }
 .pad { padding: 40px 0; }
 
@@ -410,7 +412,7 @@ a { color: inherit; text-decoration: none; }
    single-column section rhythm they already have. */
 
 /* The verse: a standing band between the masthead and the news. */
-.bs-epigraph { display: flex; gap: 26px; align-items: baseline; padding: 34px 0 2px; }
+.bs-epigraph { display: flex; gap: 26px; align-items: baseline; padding: 34px 0; }
 .bs-epigraph p {
   margin: 0; max-width: 82ch;
   font-family: var(--serif); font-size: 15px; font-style: italic; font-weight: 400;
@@ -826,7 +828,7 @@ a.bs-kv:hover span { color: var(--accent); }
   .topbar-inner { height: auto; flex-wrap: wrap; gap: 10px 20px; padding: 12px 0; }
   .brand { font-size: 22px; }
   .nav { order: 3; flex-basis: 100%; gap: 18px; }
-  .bs-epigraph { padding-top: 24px; }
+  .bs-epigraph { padding: 24px 0; }
 
   .row-attention { grid-template-columns: minmax(0, 1fr) 70px 16px; }
   .row-attention .level, .row-attention .detail { display: none; }
