@@ -239,7 +239,7 @@
       "type": "Interstate war",
       "status": "worsening",
       "started": "2022-02-24",
-      "markets": ["gas", "wheat"],
+      "markets": ["eugas", "wheat"],
       "region": "Europe",
       "keywords": ["ukraine", "ukrainian", "kyiv", "russia", "russian", "moscow", "putin", "zelensky", "kremlin"],
       "summary": "Fifth year of full-scale war. Three rounds of US-brokered talks through the spring produced prisoner exchanges and a brief energy ceasefire but never reached the territorial question. Moscow declared negotiations at a dead end in late August and is escalating strikes on Kyiv.",
@@ -261,6 +261,102 @@
           "action": "Russia launches the full-scale invasion of Ukraine.",
           "where": "Ukraine",
           "source": "https://en.wikipedia.org/wiki/Russian_invasion_of_Ukraine"
+        },
+        {
+          "id": "u20", "date": "2022-04-02", "approx": true, "actor": "Russia", "kind": "strike", "major": true,
+          "action": "Russian forces withdraw from the Kyiv region after failing to take the capital, and atrocities at Bucha come to light. Sources give the withdrawal over several days in early April.",
+          "where": "Kyiv Oblast",
+          "source": "https://en.wikipedia.org/wiki/Russian_invasion_of_Ukraine"
+        },
+        {
+          "id": "u21", "date": "2022-05-20", "actor": "Russia", "kind": "strike", "major": true,
+          "action": "Mariupol falls after a destructive siege, completing Russia's land bridge to Crimea.",
+          "where": "Mariupol",
+          "source": "https://en.wikipedia.org/wiki/Siege_of_Mariupol"
+        },
+        {
+          "id": "u22", "date": "2022-09-06", "actor": "Ukraine", "kind": "strike", "major": true,
+          "action": "Ukraine's Kharkiv counteroffensive breaks the front and recaptures territory, forcing a Russian retreat.",
+          "where": "Kharkiv Oblast",
+          "source": "https://en.wikipedia.org/wiki/2022_Kharkiv_counteroffensive"
+        },
+        {
+          "id": "u23", "date": "2022-09-30", "actor": "Russia", "kind": "political", "major": true,
+          "action": "Russia declares the annexation of Donetsk, Luhansk, Kherson and Zaporizhzhia oblasts.",
+          "where": "Moscow",
+          "source": "https://en.wikipedia.org/wiki/Annexation_of_Southern_and_Eastern_Ukraine"
+        },
+        {
+          "id": "u24", "date": "2022-11-11", "actor": "Ukraine", "kind": "strike", "major": true,
+          "action": "Ukrainian forces liberate Kherson city, the only regional capital Russia had captured.",
+          "where": "Kherson",
+          "source": "https://en.wikipedia.org/wiki/2022_Kherson_counteroffensive"
+        },
+        {
+          "id": "u25", "date": "2023-05-20", "actor": "Russia", "kind": "strike", "major": true,
+          "action": "Russia captures Bakhmut after the longest and deadliest battle of the war.",
+          "where": "Bakhmut",
+          "source": "https://en.wikipedia.org/wiki/Battle_of_Bakhmut"
+        },
+        {
+          "id": "u26", "date": "2023-06-06", "actor": "Contested", "kind": "strike", "major": true,
+          "action": "The Kakhovka Dam is destroyed, flooding communities along the Dnieper and draining the reservoir. Responsibility is disputed.",
+          "where": "Kherson Oblast",
+          "source": "https://en.wikipedia.org/wiki/Destruction_of_the_Kakhovka_Dam"
+        },
+        {
+          "id": "u27", "date": "2023-06-23", "actor": "Wagner", "kind": "political", "major": true,
+          "action": "Wagner forces under Prigozhin mutiny and advance toward Moscow before turning back.",
+          "where": "Rostov-on-Don and the M4 highway",
+          "source": "https://en.wikipedia.org/wiki/Wagner_Group_rebellion"
+        },
+        {
+          "id": "u28", "date": "2024-02-17", "actor": "Russia", "kind": "strike", "major": true,
+          "action": "Avdiivka falls to Russian forces after a prolonged battle, Russia's most significant gain since Bakhmut.",
+          "where": "Avdiivka",
+          "source": "https://en.wikipedia.org/wiki/Battle_of_Avdiivka_(2022%E2%80%932024)"
+        },
+        {
+          "id": "u29", "date": "2024-08-06", "actor": "Ukraine", "kind": "strike", "major": true,
+          "action": "Ukraine launches a cross-border incursion into Russia's Kursk Oblast, the first major ground operation on Russian soil.",
+          "where": "Kursk Oblast",
+          "source": "https://en.wikipedia.org/wiki/Kursk_offensive_(2024)"
+        },
+        {
+          "id": "u30", "date": "2025-05-16", "actor": "Mediation", "kind": "diplomacy", "major": true,
+          "action": "Russia and Ukraine hold direct talks in Istanbul for the first time in three years. They end in under two hours with no ceasefire, but agree to exchange 1,000 prisoners each — the largest swap of the war.",
+          "where": "Istanbul",
+          "source": "https://commonslibrary.parliament.uk/research-briefings/cbp-10251/"
+        },
+        {
+          "id": "u31", "date": "2025-06-02", "actor": "Mediation", "kind": "diplomacy",
+          "action": "A second Istanbul round exchanges memorandums setting out each side's peace terms, without agreement.",
+          "where": "Istanbul",
+          "source": "https://commonslibrary.parliament.uk/research-briefings/cbp-10251/"
+        },
+        {
+          "id": "u32", "date": "2025-12-15", "approx": true, "actor": "Mediation", "kind": "diplomacy", "major": true,
+          "action": "US and Ukrainian negotiators agree a 20-point plan to end the war, which passes to Moscow for review. Sources place this in December; the exact date is unsettled.",
+          "where": "Washington and Kyiv",
+          "source": "https://www.aljazeera.com/news/2025/12/25/russia-ukraine-war-list-of-key-events-day-1400"
+        },
+        {
+          "id": "u33", "date": "2026-02-01", "actor": "Ukraine", "kind": "strike",
+          "action": "Starlink service is cut off for Russian forces operating in Ukraine, degrading their tactical communications.",
+          "where": "Front line",
+          "source": "https://www.criticalthreats.org/analysis/russian-offensive-campaign-assessment-august-12-2026"
+        },
+        {
+          "id": "u34", "date": "2026-02-10", "approx": true, "actor": "Ukraine", "kind": "strike", "major": true,
+          "action": "Ukraine launches a counteroffensive on the southern front in the Oleksandrivka and Hulyaipole directions, aiming to expel Russian forces from Dnipropetrovsk Oblast and disrupt Russia's planned spring offensive. It produces the first monthly net Ukrainian territorial gain since the 2024 Kursk incursion.",
+          "where": "Dnipropetrovsk Oblast",
+          "source": "https://en.wikipedia.org/wiki/2026_Ukrainian_counteroffensive"
+        },
+        {
+          "id": "u35", "date": "2026-08-12", "actor": "Ukraine", "kind": "political", "major": true,
+          "action": "Ukraine announces the results of the Oleksandrivka counteroffensive covering January to August 2026, its largest offensive inside the country since 2023.",
+          "where": "Kyiv",
+          "source": "https://www.criticalthreats.org/analysis/russian-offensive-campaign-assessment-august-12-2026"
         },
         {
           "id": "u02", "date": "2026-01-01", "actor": "Ukraine", "kind": "strike",

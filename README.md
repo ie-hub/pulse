@@ -55,7 +55,7 @@ it was measured and where it came from:
 | U.S. Treasury | 2y / 10y / 30y par yields | Official, daily |
 | Cboe | VIX | Official daily close |
 | LBMA | Gold, silver | Benchmark, daily |
-| Yahoo Finance | Energy, FX, equities, copper, BTC, wheat | Exchange-derived, **delayed** |
+| Yahoo Finance | Energy (incl. EU TTF gas), FX, equities, copper, BTC, wheat | Exchange-derived, **delayed** |
 | FRED | Fed funds, credit spreads | **Unreachable from this machine** |
 
 Nothing is labelled live, because nothing here is. Fed funds shows as
@@ -70,6 +70,26 @@ means unusual for gold, not unusual in the abstract.
 `whatMatters` and `signals` in [`lib/macro.mjs`](lib/macro.mjs) are the
 dashboard's own reading of those numbers, labelled as such in the UI. They are
 interpretation, not advice, and each states the evidence it was drawn from.
+
+## Government figures
+
+Debt, defense spending and foreign aid come from official keyless U.S. endpoints
+and carry the same provenance rule as the markets.
+
+| Figure | Source | What it actually measures |
+| --- | --- | --- |
+| Debt | Treasury Fiscal Data | Debt to the penny, official daily |
+| Defense | USAspending, agency 097 | Obligated and outlayed, reported separately — neither is "the budget" |
+| Foreign aid | USAspending, by geography | Grant and cooperative-agreement obligations by **place of performance** |
+
+Foreign aid needs its caveat stated plainly: ForeignAssistance.gov is the
+authoritative publisher, but its host is unreachable from this network, so
+[`lib/aid.mjs`](lib/aid.mjs) builds the figure from federal award data instead.
+It is grouped by where the work is performed rather than where the recipient is
+registered — most USAID and State grants go to U.S.-registered organisations, so
+grouping by recipient would file $2.9bn under "United States" and rank Norway
+above Ethiopia. It is not the official foreign-aid total: it excludes contracts,
+loans, credit guarantees and military assistance. The UI labels it as such.
 
 ## Tracked vs. watched
 
@@ -98,3 +118,5 @@ writing it a timeline.
   event data is curated by hand rather than machine-fed.
 - The climate view is near-term hazard (NWS alerts, USGS quakes). No temperature
   or emissions series is wired in.
+- ForeignAssistance.gov is unreachable from this network, so the foreign-aid
+  figure is a USAspending-derived proxy — see **Government figures** above.

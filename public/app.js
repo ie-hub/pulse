@@ -22,6 +22,13 @@ const svgEl = (tag, attrs = {}) => {
 };
 const ext = (href, text, className) => el('a', { href, className, target: '_blank', rel: 'noopener noreferrer' }, text);
 
+const globeIcon = () => {
+  const n = svgEl('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',
+    'stroke-width': '1.6', 'stroke-linecap': 'round', 'aria-hidden': 'true' });
+  n.innerHTML = '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/>';
+  return n;
+};
+
 const money = (n, currency = 'USD', digits = 2) => n.toLocaleString('en-US', {
   style: 'currency', currency, minimumFractionDigits: digits, maximumFractionDigits: digits,
 });
@@ -240,6 +247,152 @@ function drawChart(wrap, market, events, fromDate, height = 240) {
   wrap.append(svg, tip);
 }
 
+
+
+// ---- info tips ------------------------------------------------------------
+// Provenance and methodology belong with the thing they describe, but not as
+// body copy competing with it. A tip keeps the note one click away.
+
+let openTip = null;
+
+function closeTip() {
+  openTip?.classList.remove('is-open');
+  openTip = null;
+}
+
+document.addEventListener('click', (e) => { if (openTip && !openTip.contains(e.target)) closeTip(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeTip(); });
+
+function infoTip(...content) {
+  const wrap = el('span', { className: 'tip' });
+  const btn = el('button', { className: 'tip-btn', type: 'button', 'aria-label': 'Source and method' }, 'i');
+  const pop = el('span', { className: 'tip-pop', role: 'note' }, content.flat());
+  wrap.append(btn, pop);
+
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const wasOpen = wrap.classList.contains('is-open');
+    closeTip();
+    if (wasOpen) return;
+    wrap.classList.add('is-open');
+    openTip = wrap;
+    // flip to the left of the button when it would run off the right edge
+    const box = pop.getBoundingClientRect();
+    pop.classList.toggle('align-right', box.right > window.innerWidth - 12);
+  });
+  return wrap;
+}
+
+// ---- pull-out drawer ------------------------------------------------------
+
+let drawerEls = null;
+
+function closeDrawer() {
+  if (!drawerEls) return;
+  drawerEls.panel.classList.remove('is-open');
+  drawerEls.veil.classList.remove('is-open');
+  document.body.style.overflow = '';
+  setTimeout(() => { drawerEls?.root.remove(); drawerEls = null; }, 220);
+}
+
+function openDrawer(title, subtitle, build, note) {
+  closeDrawer();
+  const veil = el('div', { className: 'veil' });
+  const close = el('button', { className: 'ghost drawer-close', type: 'button', 'aria-label': 'Close' }, '✕');
+  const panel = el('aside', {
+    className: 'drawer', role: 'dialog', 'aria-modal': 'true', 'aria-label': title,
+  }, [
+    el('header', { className: 'drawer-head' }, [
+      el('div', {}, [
+        el('h2', {}, [title, note ?? null]),
+        subtitle ? el('p', { className: 'drawer-sub' }, subtitle) : null,
+      ]),
+      close,
+    ]),
+    el('div', { className: 'drawer-body' }, build()),
+  ]);
+  const root = el('div', { className: 'drawer-root' }, [veil, panel]);
+  document.body.append(root);
+  document.body.style.overflow = 'hidden';
+  drawerEls = { root, panel, veil };
+
+  veil.addEventListener('click', closeDrawer);
+  close.addEventListener('click', closeDrawer);
+  requestAnimationFrame(() => { panel.classList.add('is-open'); veil.classList.add('is-open'); });
+  // rAF does not fire in a background tab, so make sure it opens regardless
+  setTimeout(() => { panel.classList.add('is-open'); veil.classList.add('is-open'); }, 30);
+  close.focus();
+}
+
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });
+
+function aidDrawerBody() {
+  const aid = state.aid;
+  if (!aid) {
+    return el('p', { className: 'footnote' },
+      `Unavailable. ${state.aidError ?? ''} Nothing is shown in its place.`);
+  }
+
+  const span = (p) => `${fmtDate(p.start, { month: 'short', day: 'numeric' })} – ${fmtDate(p.end, { month: 'short', day: 'numeric', year: 'numeric' })}`;
+  const yoy = aid.priorTotal ? ((aid.total - aid.priorTotal) / aid.priorTotal) * 100 : null;
+  const compact = (n) => bigMoney(n).replace(' billion', 'B').replace(' million', 'M');
+
+  const max = Math.max(...aid.countries.map((c) => Math.max(c.amount, c.lastFullAmount)), 1);
+  const list = el('div', { className: 'aid-list' });
+  const search = el('input', { className: 'drawer-search', type: 'search', placeholder: 'Filter countries' });
+
+  const paint = () => {
+    const q = search.value.trim().toLowerCase();
+    const rows = aid.countries.filter((c) => !q || c.name.toLowerCase().includes(q));
+    list.replaceChildren(...(rows.length ? rows.map((c, i) => el('div', { className: 'aid-row' }, [
+      el('span', { className: 'aid-rank' }, String(i + 1)),
+      el('span', { className: 'aid-name' }, c.name),
+      el('span', { className: 'aid-amt' }, c.amount ? compact(c.amount) : '—'),
+      el('span', { className: 'aid-amt prior' }, c.lastFullAmount ? compact(c.lastFullAmount) : '—'),
+      el('span', { className: 'aid-bar' }, [
+        el('i', { style: `width:${Math.max(c.amount ? 1 : 0, (c.amount / max) * 100)}%` }),
+        el('u', { style: `width:${Math.max(c.lastFullAmount ? 1 : 0, (c.lastFullAmount / max) * 100)}%` }),
+      ]),
+    ])) : [el('p', { className: 'footnote' }, 'No country matches.')]));
+  };
+  search.addEventListener('input', paint);
+  paint();
+
+  return [
+    el('div', { className: 'aid-summary' }, [
+      el('div', {}, [
+        el('span', { className: 'figure-k' }, `FY${aid.fiscalYear} to date`),
+        el('span', { className: 'figure-v' }, bigMoney(aid.total)),
+        el('span', { className: 'figure-note' }, span(aid.period)),
+      ]),
+      el('div', {}, [
+        el('span', { className: 'figure-k' }, 'Same window last year'),
+        el('span', { className: 'figure-v' }, [
+          compact(aid.priorTotal),
+          yoy != null ? el('span', { className: `aid-yoy ${yoy >= 0 ? 'up' : 'down'}` },
+            ` ${yoy >= 0 ? '+' : '−'}${Math.abs(yoy).toFixed(0)}%`) : null,
+        ]),
+        el('span', { className: 'figure-note' }, span(aid.priorPeriod)),
+      ]),
+      el('div', {}, [
+        el('span', { className: 'figure-k' }, `FY${aid.lastFullYear.fiscalYear} full year`),
+        el('span', { className: 'figure-v' }, compact(aid.lastFullYear.total)),
+        el('span', { className: 'figure-note' }, `${aid.lastFullYear.countries} countries`),
+      ]),
+    ]),
+    el('div', { className: 'aid-head' }, [
+      el('span', {}, `${aid.countries.length} countries`),
+      el('span', { className: 'aid-head-cols' }, [
+        el('span', {}, `FY${aid.fiscalYear} to date`),
+        el('span', { className: 'prior' }, `FY${aid.lastFullYear.fiscalYear} full`),
+      ]),
+    ]),
+    search,
+    list,
+  ];
+}
+
 // ---- level 1: pulse -------------------------------------------------------
 
 function attentionRows() {
@@ -398,7 +551,15 @@ function renderWorld(host) {
 
   host.replaceChildren(
     el('section', { className: 'section' }, [
-      sectionLabel('Conflicts & geopolitics', `${active} active of ${subjects.length} followed`),
+      (() => {
+        const l = sectionLabel('Conflicts & geopolitics', `${active} active of ${subjects.length} followed`);
+        l.append(infoTip(
+          'Subjects with a curated timeline carry measured week-on-week trends. The rest are followed by '
+          + 'wire coverage only — their level reflects today’s reporting volume, and they show no trend '
+          + 'because a day of feeds gives no baseline.',
+        ));
+        return l;
+      })(),
       el('div', { className: 'matrix-head' }, [
         th('subject', 'Subject'), th('region', 'Region'), el('span', {}, 'Activity'),
         el('span', {}, ''), th('activity', 'Level'), el('span', {}, 'Latest'),
@@ -420,10 +581,6 @@ function renderWorld(host) {
           el('span', { className: 'detail' }, detail.length > 78 ? `${detail.slice(0, 78)}…` : detail),
         ]);
       }),
-      el('p', { className: 'footnote' },
-        'Subjects with a curated timeline carry measured week-on-week trends. The rest are followed by '
-        + 'wire coverage only — their level reflects today’s reporting volume, and they show no trend '
-        + 'because a day of feeds gives no baseline.'),
     ]),
   );
 }
@@ -432,7 +589,8 @@ const MKT_GROUPS = ['Energy', 'Metals', 'Currencies', 'Rates', 'Equities', 'Othe
 
 // Instruments worth glancing at when looking at this one.
 const RELATED = {
-  brent: ['crude', 'dxy', 'ust10y'], crude: ['brent', 'dxy', 'gas'], gas: ['crude', 'brent'],
+  brent: ['crude', 'dxy', 'ust10y'], crude: ['brent', 'dxy', 'gas'], gas: ['crude', 'eugas'],
+  eugas: ['gas', 'crude', 'wheat'],
   gold: ['ust10y', 'dxy', 'silver'], silver: ['gold', 'copper'], copper: ['sp500', 'usdcny'],
   dxy: ['eurusd', 'usdjpy', 'ust2y'], eurusd: ['dxy', 'ust10y'], usdjpy: ['dxy', 'ust10y'], usdcny: ['dxy', 'copper'],
   ust2y: ['ust10y', 'curve', 'dxy'], ust10y: ['ust2y', 'curve', 'gold'], ust30y: ['ust10y', 'curve'],
@@ -580,10 +738,21 @@ function renderMarkets(host) {
     ]));
   }
 
-  const board = el('section', { className: 'section' }, [
-    sectionLabel('The board', `${markets.filter((m) => m.value != null).length} of ${markets.length} instruments reporting`,
-      'Click any row for horizons, chart and provenance'),
-  ]);
+  const boardLabel = sectionLabel('The board',
+    `${markets.filter((m) => m.value != null).length} of ${markets.length} instruments reporting`,
+    'Click any row for horizons, chart and provenance');
+  boardLabel.insertBefore(infoTip(
+    el('b', {}, 'Sources by instrument. '),
+    'U.S. Treasury (par yields, official daily) · Cboe (VIX, official close) · LBMA (gold and silver '
+    + 'benchmark) · exchange-derived quotes via Yahoo Finance for the rest, which are delayed and labelled '
+    + 'as such. Nothing here is real-time. ',
+    el('b', {}, 'Fed funds. '),
+    'No source on this machine — FRED is unreachable from this network — so it is shown as unavailable '
+    + 'rather than filled in. ',
+    el('b', {}, 'Unusual. '),
+    'Compares an instrument’s move with its own 90-day range.',
+  ), boardLabel.querySelector('.right'));
+  const board = el('section', { className: 'section' }, [boardLabel]);
 
   for (const group of MKT_GROUPS) {
     const rows = markets.filter((m) => m.group === group);
@@ -616,13 +785,6 @@ function renderMarkets(host) {
     }
   }
   sections.push(board);
-
-  sections.push(el('p', { className: 'footnote' },
-    'Sources by instrument: U.S. Treasury (par yields, official daily) · Cboe (VIX, official close) · '
-    + 'LBMA (gold and silver benchmark) · exchange-derived quotes via Yahoo Finance for the rest, which are '
-    + 'delayed and labelled as such. Nothing here is real-time. Fed funds has no source on this machine — '
-    + 'FRED is unreachable from this network — so it is shown as unavailable rather than filled in. '
-    + '“Unusual” compares an instrument’s move with its own 90-day range.'));
 
   host.replaceChildren(...sections);
   redraw = null;
@@ -671,8 +833,18 @@ function debtSection() {
   }
 
   const chartWrap = el('div', { className: 'chart-wrap' });
+
+  const label = sectionLabel('Public debt', 'total outstanding');
+  label.append(infoTip(
+    el('b', {}, 'Source. '),
+    ext(d.source.url, d.source.name), ` · ${d.source.type} · measured ${fmtDate(d.observedOn)}. `,
+    el('b', {}, 'On the colour. '),
+    'Rising debt is shown in red purely so direction reads at a glance. That is a '
+    + 'presentational choice, not a judgement.',
+  ));
+
   const section = el('section', { className: 'section' }, [
-    sectionLabel('Public debt', 'total outstanding, to the penny'),
+    label,
     el('div', { className: 'debt-headline' }, [
       el('span', { className: 'debt-total' }, bigMoney(d.total)),
       el('span', { className: 'debt-when' }, `as of ${fmtDate(d.observedOn)}`),
@@ -697,11 +869,6 @@ function debtSection() {
       ]);
     })),
     chartWrap,
-    el('p', { className: 'footnote' }, [
-      'Source: ', ext(d.source.url, d.source.name), ` · ${d.source.type} · measured ${fmtDate(d.observedOn)}. `,
-      'Rising debt is coloured as a negative here purely so the direction is legible at a glance; that is a '
-      + 'presentational choice, not a judgement.',
-    ]),
   ]);
 
   // paint once mounted — the chart measures its container
@@ -711,22 +878,164 @@ function debtSection() {
   return section;
 }
 
+
+function defenseSection() {
+  const d = state.defense;
+  if (!d) {
+    const l = sectionLabel('Department of War', 'unavailable');
+    return el('section', { className: 'section' }, [l,
+      el('p', { className: 'footnote', style: 'padding-top:14px' },
+        `No figure available. ${state.defenseError ?? ''} Nothing is shown in its place.`)]);
+  }
+
+  const compact = (n) => bigMoney(n).replace(' trillion', 'T').replace(' billion', 'B');
+  const vsPrior = d.prior ? ((d.obligated - d.prior.obligated) / d.prior.obligated) * 100 : null;
+
+  const label = sectionLabel('Department of War', `obligations · FY${d.fiscalYear}`);
+  label.append(infoTip(
+    el('b', {}, 'What this counts. '),
+    'Obligated is money legally committed; outlayed is money actually paid. Neither is “the budget” — '
+    + 'budgetary resources is the authority available to spend. ',
+    el('b', {}, 'Part year. '),
+    `Figures run through federal period ${d.throughPeriod} of 12, so they are not comparable with a full `
+    + 'prior year without allowing for that. Cumulative obligations can also be revised down when awards '
+    + 'are de-obligated, which is why the line can fall. ',
+    el('b', {}, 'Source. '),
+    ext(d.source.url, d.source.name), ` · ${d.source.type}, published as ${d.source.publishedAs}.`,
+  ));
+
+  const chartWrap = el('div', { className: 'chart-wrap' });
+  const section = el('section', { className: 'section' }, [
+    label,
+    el('div', { className: 'debt-headline' }, [
+      el('span', { className: 'debt-total' }, bigMoney(d.obligated)),
+      el('span', { className: 'debt-when' }, `obligated · period ${d.throughPeriod} of 12`),
+    ]),
+    el('div', { className: 'debt-split' }, [
+      el('div', {}, [
+        el('span', { className: 'figure-k' }, 'Actually paid out'),
+        el('span', { className: 'figure-v' }, compact(d.outlayed)),
+      ]),
+      el('div', {}, [
+        el('span', { className: 'figure-k' }, 'Budget authority'),
+        el('span', { className: 'figure-v' }, compact(d.budgetaryResources)),
+      ]),
+      el('div', {}, [
+        el('span', { className: 'figure-k' }, 'Of authority obligated'),
+        el('span', { className: 'figure-v' }, `${d.shareObligated.toFixed(1)}%`),
+      ]),
+    ]),
+    el('div', { className: 'horizons' }, [
+      d.prior ? el('div', { className: 'horizon' }, [
+        el('span', { className: 'horizon-k' }, `vs FY${d.prior.fiscalYear} full year`),
+        el('span', { className: `horizon-v ${vsPrior >= 0 ? 'up' : 'down'}` }, pct(vsPrior, 1)),
+        el('span', { className: 'horizon-sub' }, compact(d.prior.obligated)),
+      ]) : null,
+      ...d.history.slice(1, 4).map((y) => el('div', { className: 'horizon' }, [
+        el('span', { className: 'horizon-k' }, `FY${y.fiscalYear}`),
+        el('span', { className: 'horizon-v' }, compact(y.obligated)),
+        el('span', { className: 'horizon-sub' }, `${((y.obligated / y.authority) * 100).toFixed(0)}% of authority`),
+      ])),
+    ]),
+    chartWrap,
+  ]);
+
+  section.paintChart = () => drawChart(chartWrap, {
+    label: 'Cumulative obligations', currency: 'USD', series: d.series,
+  }, [], null, 190);
+  return section;
+}
+
+
+function openAidDrawer() {
+  openDrawer(
+    'What the U.S. sends abroad',
+    state.aid ? `By country · fiscal year ${state.aid.fiscalYear} to date` : 'Unavailable',
+    aidDrawerBody,
+    state.aid ? infoTip(
+      el('b', {}, 'What this counts. '),
+      `${state.aid.measure}. `,
+      el('b', {}, 'What it is not. '),
+      `${state.aid.caveat} `,
+      el('b', {}, 'Source. '),
+      ext(state.aid.source.url, state.aid.source.name), ` · ${state.aid.source.type}. `,
+      'Fiscal years run 1 October to 30 September; the comparison uses the same window one year earlier '
+      + 'so a part-year is never set against a full one.',
+    ) : null,
+  );
+}
+
+function aidSection() {
+  const aid = state.aid;
+  if (!aid) {
+    return el('section', { className: 'section' }, [
+      sectionLabel('Foreign aid', 'unavailable'),
+      el('p', { className: 'footnote', style: 'padding-top:14px' },
+        `No figures available. ${state.aidError ?? ''} Nothing is shown in its place.`),
+    ]);
+  }
+
+  const compact = (n) => bigMoney(n).replace(' trillion', 'T').replace(' billion', 'B').replace(' million', 'M');
+  const yoy = aid.priorTotal ? ((aid.total - aid.priorTotal) / aid.priorTotal) * 100 : null;
+  const receiving = aid.countries.filter((c) => c.amount > 0).length;
+
+  const label = sectionLabel('Foreign aid', `grants abroad · FY${aid.fiscalYear}`);
+  label.append(infoTip(
+    el('b', {}, 'What this counts. '), `${aid.measure}. `,
+    el('b', {}, 'What it is not. '), `${aid.caveat} `,
+    el('b', {}, 'Source. '), ext(aid.source.url, aid.source.name), ` · ${aid.source.type}. `,
+    'The year-on-year figure uses the same window one year earlier, so a part-year is never set '
+    + 'against a full one.',
+  ));
+
+  const top = aid.countries.slice(0, 5);
+  const max = top[0]?.amount ?? 1;
+
+  const more = el('button', { className: 'icon-btn', type: 'button' });
+  more.append(globeIcon(), el('span', {}, `All ${aid.countries.length} countries`));
+  more.addEventListener('click', openAidDrawer);
+
+  return el('section', { className: 'section' }, [
+    label,
+    el('div', { className: 'debt-headline' }, [
+      el('span', { className: 'debt-total' }, bigMoney(aid.total)),
+      el('span', { className: 'debt-when' }, `to date · ${receiving} countries`),
+    ]),
+    el('div', { className: 'debt-split' }, [
+      el('div', {}, [
+        el('span', { className: 'figure-k' }, 'Same window last year'),
+        el('span', { className: 'figure-v' }, compact(aid.priorTotal)),
+      ]),
+      yoy != null ? el('div', {}, [
+        el('span', { className: 'figure-k' }, 'Year on year'),
+        el('span', { className: `figure-v ${yoy >= 0 ? 'up' : 'down'}` }, pct(yoy, 0)),
+      ]) : null,
+      el('div', {}, [
+        el('span', { className: 'figure-k' }, `FY${aid.lastFullYear.fiscalYear} full year`),
+        el('span', { className: 'figure-v' }, compact(aid.lastFullYear.total)),
+      ]),
+    ]),
+    el('div', { className: 'aid-top' }, top.map((c) => el('div', { className: 'aid-top-row' }, [
+      el('span', { className: 'aid-top-name' }, c.name),
+      el('span', { className: 'aid-top-amt' }, compact(c.amount)),
+      el('span', { className: 'aid-top-bar' }, el('i', { style: `width:${(c.amount / max) * 100}%` })),
+    ]))),
+    more,
+  ]);
+}
+
 function renderGovernment(host) {
   const gov = state.official ?? [];
   const bodies = [...new Set(gov.map((o) => o.outlet))];
   const debt = debtSection();
+  const defense = defenseSection();
 
+  // Like every other domain view, this opens straight into its first section —
+  // the top nav already says where you are.
   host.replaceChildren(
-    el('div', { className: 'view-head' }, [
-      el('a', { className: 'back', href: '#/' }, '← Pulse'),
-      el('div', { className: 'section-head' }, [
-        el('h1', { className: 'view-title' }, 'Government'),
-        el('span', { className: 'section-note' }, `${gov.length} items from ${bodies.length} bodies`),
-      ]),
-    ]),
-    debt,
+    el('div', { className: 'gov-split' }, [debt, defense, aidSection()]),
     el('section', { className: 'section' }, [
-      sectionLabel('Postings', 'bills, rules, releases and advisories'),
+      sectionLabel('Postings', `${gov.length} items from ${bodies.length} bodies`),
       ...bodies.flatMap((b) => {
         const items = gov.filter((o) => o.outlet === b);
         return [subLabel(b, `${items.length} · latest ${ago(items[0]?.time)}`),
@@ -735,6 +1044,7 @@ function renderGovernment(host) {
     ]),
   );
   debt.paintChart?.();
+  defense.paintChart?.();
 }
 
 function renderClimate(host) {
@@ -743,14 +1053,18 @@ function renderClimate(host) {
   const alerts = hazard.filter((h) => h.outlet === 'NWS');
   host.replaceChildren(
     el('section', { className: 'section' }, [
-      sectionLabel('Climate & hazard', `${hazard.length} events in the last 24 hours`),
+      (() => {
+        const l = sectionLabel('Climate & hazard', `${hazard.length} events in the last 24 hours`);
+        l.append(infoTip(
+          'Sources are NWS extreme-severity alerts and USGS earthquakes above M4.5 — near-term hazard, '
+          + 'not long-run climate trend. No temperature or emissions series is wired in yet.',
+        ));
+        return l;
+      })(),
       subLabel('Severe weather', `${alerts.length} active`),
       ...(alerts.length ? alerts.map((a) => storyRow(a, { showOutlet: false })) : [el('p', { className: 'muted' }, 'No extreme alerts active.')]),
       subLabel('Seismic', `${quakes.length} at M4.5 or above`),
       ...quakes.map((q) => storyRow(q, { showOutlet: false })),
-      el('p', { className: 'footnote' },
-        'Sources are NWS extreme-severity alerts and USGS earthquakes above M4.5 — near-term hazard, '
-        + 'not long-run climate trend. No temperature or emissions series is wired in yet.'),
     ]),
   );
 }
@@ -844,7 +1158,7 @@ function renderSituation(host, id) {
       const headline = ev.action.split(/(?<=\.)\s/)[0];
       const rest = ev.action.startsWith(headline) ? ev.action.slice(headline.length).trim() : ev.action;
       return [
-        el('div', { className: 'tl-time' }, fmtDate(ev.date, { month: 'short', day: 'numeric' })),
+        el('div', { className: 'tl-time' }, fmtDate(ev.date)),
         el('details', { className: 'tl-item', id: `ev-${ev.id}` }, [
           el('summary', {}, [
             el('span', { className: `tl-actor ${KIND[ev.kind] ?? ''}` }, ev.actor),
@@ -856,7 +1170,7 @@ function renderSituation(host, id) {
               ev.where ? el('span', {}, ev.where) : null,
               el('span', {}, fmtDate(ev.date)),
               ev.approx ? el('span', { className: 'tag-approx', title: 'Sources give only the month, or disagree' }, 'approx.') : null,
-              cause ? el('span', {}, `In response to ${cause.actor}, ${fmtDate(cause.date, { month: 'short', day: 'numeric' })}`) : null,
+              cause ? el('span', {}, `In response to ${cause.actor}, ${fmtDate(cause.date)}`) : null,
               ev.source ? ext(ev.source, 'Source') : null,
             ]),
           ]),
@@ -989,17 +1303,30 @@ function initChrome() {
 }
 
 async function refresh() {
+  let next;
   try {
     const res = await fetch('/api/state', { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    state = await res.json();
-    lastGood = state.generatedAt;
-    const live = state.status.filter((s) => s.ok).length;
-    $('clock').textContent = `${dayFmt.format(new Date(state.generatedAt))} · ${clockFmt.format(new Date(state.generatedAt))}`;
-    $('health').textContent = `${live}/${state.status.length} sources`;
+    next = await res.json();
+  } catch (err) {
+    // A fetch problem is a data problem; say so and keep the last good view.
+    $('health').textContent = lastGood ? 'stale' : `unreachable (${err.message})`;
+    return;
+  }
+
+  state = next;
+  lastGood = state.generatedAt;
+  const live = state.status.filter((s) => s.ok).length;
+  $('clock').textContent = `${dayFmt.format(new Date(state.generatedAt))} · ${clockFmt.format(new Date(state.generatedAt))}`;
+  $('health').textContent = `${live}/${state.status.length} sources`;
+
+  // A rendering fault is this app's bug, not the sources'. Reporting it as
+  // "stale" sent me hunting a data problem that did not exist.
+  try {
     route();
   } catch (err) {
-    $('health').textContent = lastGood ? 'stale' : `unreachable (${err.message})`;
+    console.error('[pulse] render failed:', err);
+    $('view').replaceChildren(el('p', { className: 'pad muted' }, `Interface error: ${err.message}`));
   }
 }
 

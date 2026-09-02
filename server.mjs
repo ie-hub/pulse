@@ -8,6 +8,8 @@ import { loadSource } from './lib/feeds.mjs';
 import { loadMarkets } from './lib/markets.mjs';
 import { whatMatters, marketSignals } from './lib/macro.mjs';
 import { usDebt } from './lib/fiscal.mjs';
+import { foreignAid } from './lib/aid.mjs';
+import { defenseSpending } from './lib/defense.mjs';
 import { clusterStories } from './lib/cluster.mjs';
 import { scoreSubject, domainPulse } from './lib/activity.mjs';
 import { recordHistory } from './lib/history.mjs';
@@ -66,12 +68,14 @@ async function loadSituations() {
 }
 
 async function buildState() {
-  const [feedEntries, marketsEntry, situations, scripture, debtEntry] = await Promise.all([
+  const [feedEntries, marketsEntry, situations, scripture, debtEntry, aidEntry, defenseEntry] = await Promise.all([
     Promise.all(SOURCES.map(async (s) => [s, await cached(s.id, TTL.feed, () => loadSource(s))])),
     cached('markets', TTL.market, loadMarkets),
     loadSituations(),
     dailyScripture(SCRIPTURE),
     cached('debt', TTL.feed, usDebt),
+    cached('aid', 6 * 60 * 60 * 1000, foreignAid),   // annual data; refetch rarely
+    cached('defense', 6 * 60 * 60 * 1000, defenseSpending),
   ]);
 
   const status = [];
@@ -145,6 +149,10 @@ async function buildState() {
     marketsError,
     debt: debtEntry.data ?? null,
     debtError: debtEntry.error ?? null,
+    aid: aidEntry.data ?? null,
+    aidError: aidEntry.error ?? null,
+    defense: defenseEntry.data ?? null,
+    defenseError: defenseEntry.error ?? null,
     whatMatters: whatMatters(marketList),
     signals: marketSignals(marketList),
     situations: scored,
