@@ -1414,16 +1414,6 @@ function renderClimate(host) {
   host.replaceChildren(...[stateSection, hazSection, quakeSection, wxSection].filter(Boolean));
 }
 
-function renderWire(host) {
-  const wire = state.wire ?? [];
-  host.replaceChildren(
-    el('section', { className: 'section' }, [
-      sectionLabel('The wire', `${wire.length} stories, grouped across outlets`),
-      ...wire.map((s) => storyRow(s)),
-    ]),
-  );
-}
-
 // ---- level 3: entity ------------------------------------------------------
 
 function renderSituation(host, id) {
@@ -1590,7 +1580,6 @@ const NAV = [
   { hash: '#/government', label: 'Government' },
   { hash: '#/climate', label: 'Climate' },
   { hash: '#/indiana', label: 'Indiana' },
-  { hash: '#/wire', label: 'Wire' },
 ];
 
 function renderNav() {
@@ -1605,7 +1594,7 @@ function renderNav() {
 const ROUTES = {
   '#/': renderPulse, '#/world': renderWorld, '#/markets': renderMarkets,
   '#/government': renderGovernment, '#/climate': renderClimate,
-  '#/indiana': renderIndiana, '#/wire': renderWire,
+  '#/indiana': renderIndiana,
 };
 
 function route() {
@@ -1618,13 +1607,17 @@ function route() {
   const watched = hash.match(/^#\/world\/(.+)$/);
 
   // Names the view on the host, so a style can be scoped to one page without
-  // touching the shared component it is built from.
-  host.dataset.view = situation || watched ? 'entity'
-    : (hash.replace(/^#\/?/, '') || 'pulse');
-
-  if (situation) renderSituation(host, situation[1]);
-  else if (watched) renderWatched(host, watched[1]);
-  else (ROUTES[hash] ?? renderPulse)(host);
+  // touching the shared component it is built from. Taken from what actually
+  // renders, not from the hash: a stale link to a removed section falls back to
+  // Pulse, and would otherwise be styled as the section that no longer exists.
+  if (situation) { host.dataset.view = 'entity'; renderSituation(host, situation[1]); }
+  else if (watched) { host.dataset.view = 'entity'; renderWatched(host, watched[1]); }
+  else {
+    const render = ROUTES[hash] ?? renderPulse;
+    host.dataset.view = (Object.keys(ROUTES).find((k) => ROUTES[k] === render) ?? '#/')
+      .replace(/^#\/?/, '') || 'pulse';
+    render(host);
+  }
 
   renderNav();
   window.scrollTo(0, 0);
