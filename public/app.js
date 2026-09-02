@@ -1842,6 +1842,8 @@ function route() {
 }
 
 const ICONS = {
+  menu: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
+  close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
   dark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
   light: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
 };
@@ -1852,6 +1854,38 @@ function applyTheme(theme) {
   btn.innerHTML = theme === 'dark' ? ICONS.dark : ICONS.light;
   btn.setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`);
   if (redraw) redraw();
+}
+
+// The nav collapses behind a control on narrow screens. Open state lives on the
+// header so the CSS can hold it; the button only reports it.
+function initNavToggle() {
+  const btn = $('navToggle');
+  const bar = document.querySelector('.topbar');
+  // Both icons live in the button and CSS picks one from the open class, so the
+  // glyph cannot disagree with the state — an earlier version swapped it in JS
+  // and went stale whenever the window crossed the breakpoint without a resize
+  // event firing.
+  btn.innerHTML = `<span class="i-menu">${ICONS.menu}</span><span class="i-close">${ICONS.close}</span>`;
+  const setOpen = (open) => {
+    bar.classList.toggle('is-open', open);
+    btn.setAttribute('aria-expanded', String(open));
+    btn.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+  };
+  setOpen(false);
+  btn.addEventListener('click', () => setOpen(!bar.classList.contains('is-open')));
+  // Choosing a section is the end of navigating, so the sheet closes itself.
+  window.addEventListener('hashchange', () => setOpen(false));
+  // A wide window has the nav inline again; leaving the header marked open
+  // would strand a close icon on a bar that no longer collapses, and show the
+  // sheet already open on the way back down. Reset on resize rather than on a
+  // media-query change event, which does not fire in every environment.
+  // Above the breakpoint the control is display:none and the nav is inline, so
+  // a stale open class has nothing to show and is out of the accessibility
+  // tree. Closed anyway when the window reports a change, best effort.
+  const WIDE = matchMedia('(min-width: 901px)');
+  const syncWidth = () => { if (WIDE.matches && bar.classList.contains('is-open')) setOpen(false); };
+  window.addEventListener('resize', syncWidth);
+  WIDE.addEventListener('change', syncWidth);
 }
 
 function initChrome() {
@@ -1908,6 +1942,7 @@ async function refresh() {
 }
 
 initChrome();
+initNavToggle();
 window.addEventListener('hashchange', route);
 window.addEventListener('resize', () => { if (redraw) redraw(); });
 refresh();
